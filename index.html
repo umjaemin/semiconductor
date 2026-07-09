@@ -869,7 +869,8 @@ function SemiconductorDashboard() {
     setRouteSuggestion(routeSearch(query));
     setSearchLoading(true); setSearchResult(null); setSearchError(null);
     try {
-      const res = await fetch(`/api/naver-search?q=${encodeURIComponent(query)}`);
+      const effectiveQuery = /반도체|HBM|파운드리|칩|웨이퍼|EUV/i.test(query) ? query : `${query} 반도체`;
+      const res = await fetch(`/api/naver-search?q=${encodeURIComponent(effectiveQuery)}`);
       const data = await res.json();
       if (data.error) {
         setSearchError(data.error);
