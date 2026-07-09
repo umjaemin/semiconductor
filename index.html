@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>반도체 인텔리전스 대시보드 - 한미중일대만 반도체 산업 분석</title>
+<meta name="description" content="한국·미국·중국·일본·대만 5개국 반도체 산업의 시장, 무역, 기술, 정책, 소재 의존도를 정리한 무료 대시보드. 공정 과정과 전문용어 색인 포함."/>
+<meta name="keywords" content="반도체, 반도체 산업, HBM, EUV, 파운드리, 반도체 무역, 반도체 공정, TSMC, 삼성전자, SK하이닉스, 반도체 대시보드"/>
+<meta property="og:title" content="반도체 인텔리전스 대시보드"/>
+<meta property="og:description" content="한미중일대만 반도체 산업 시장·무역·기술·정책 종합 분석 대시보드"/>
+<meta property="og:type" content="website"/>
+<link rel="canonical" href="https://YOUR-SITE-NAME.vercel.app/"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#f8fafc;}
+  ::-webkit-scrollbar{width:6px;height:6px;}
+  ::-webkit-scrollbar-track{background:rgba(15,23,42,0.03);}
+  ::-webkit-scrollbar-thumb{background:rgba(2,132,199,0.25);border-radius:3px;}
+  input::placeholder{color:#94a3b8;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState } = React;
+
+const TABS = [
+  { id:"search",      label:"통합 검색",     icon:"🔍", group:"홈" },
+  { id:"overview",    label:"시장 개요",     icon:"📊", group:"기본" },
+  { id:"trade",       label:"무역 현황",     icon:"🌐", group:"기본" },
+  { id:"tech",        label:"기술 트렌드",   icon:"🔬", group:"기본" },
+  { id:"news",        label:"최신 뉴스",     icon:"📰", group:"기본" },
+  { id:"policy",      label:"규제·정책",     icon:"⚖️", group:"기본" },
+  { id:"materials",   label:"소재 의존도",   icon:"🧪", group:"심화 분석" },
+  { id:"hscode",      label:"HS Code 분석",  icon:"📦", group:"심화 분석" },
+  { id:"supply",      label:"수급 예측",     icon:"📡", group:"심화 분석" },
+  { id:"power",       label:"전력 반도체",   icon:"⚡", group:"심화 분석" },
+  { id:"engineering", label:"전자공학 지표", icon:"🔌", group:"심화 분석" },
+  { id:"process",     label:"공정 과정",     icon:"🏭", group:"공정·용어" },
+  { id:"glossary",    label:"용어 색인",     icon:"📖", group:"공정·용어" },
+];
+
+const SEARCH_ROUTE_MAP = [
+  { keywords:["시장","market","규모","점유율","매출","성장","팹리스","파운드리","메모리","TSMC","삼성","인텔","NVIDIA","AMD","퀄컴"], tab:"overview" },
+  { keywords:["무역","수출","수입","교역","공급망","수입국","수출국","무역량","관세","FTA"], tab:"trade" },
+  { keywords:["기술","EUV","HBM","CoWoS","GAA","FinFET","3nm","2nm","패키징","적층","트랜지스터","리소그래피"], tab:"tech" },
+  { keywords:["뉴스","동향","M&A","투자계획","실적","발표","분기","어닝","합병","인수"], tab:"news" },
+  { keywords:["정책","규제","CHIPS","법","수출통제","보조금","제재","EAR","안보"], tab:"policy" },
+  { keywords:["소재","불화수소","포토레지스트","슬러리","희토류","의존도","국산화","자립","갈륨","게르마늄","특수가스","NF3"], tab:"materials" },
+  { keywords:["HS","품목코드","8541","8542","관세코드","무역통계"], tab:"hscode" },
+  { keywords:["수급","재고","리드타임","공급부족","과잉","사이클","불안정","리스크","SCM"], tab:"supply" },
+  { keywords:["SiC","GaN","GaAs","전력반도체","화합물","EV","전기차","전력변환","IGBT","MOSFET"], tab:"power" },
+  { keywords:["공학","지표","수율","yield","밀도","장비의존도","BSP"], tab:"engineering" },
+  { keywords:["웨이퍼","산화","식각","증착","CMP","이온주입","배선","테스트","번인","다이싱","패키징공정"], tab:"process" },
+];
+
+const SYSTEM_PROMPT = `당신은 반도체 산업 전문 애널리스트 겸 전자공학 전문가입니다.
+한국·미국·중국·일본·대만 5개국 중심으로 분석합니다.
+최신 데이터 기반으로 구체적인 수치, 기업명, 기술명, HS코드를 포함해 한국어로 답변하세요.
+핵심 포인트는 불릿으로, 수치는 굵게 표시해 간결하게 정리해주세요.
+사용자가 질문 형태로 물으면(예: "~는 누가 공급하나요?", "~는 왜 그런가요?") 목록 나열보다 질문에 직접 답하는 형태로 우선 답변하고, 이어서 관련 배경 정보를 정리해주세요.`;
+
+const TAB_PROMPTS = {
+  overview:"현재 글로벌 반도체 시장 규모, 주요 플레이어, 시장 성장률, 세그먼트별 현황을 최신 데이터 기반으로 정리해줘.",
+  trade:"한국·미국·중국·일본·대만의 반도체 무역 현황을 구체적 수치와 함께 정리해줘.",
+  tech:"최신 반도체 기술 트렌드(HBM, CoWoS, 2nm/3nm, GAA 등)를 정리해줘.",
+  news:"최근 반도체 산업 주요 뉴스와 기업 동향을 정리해줘.",
+  policy:"반도체 관련 주요 규제와 정책(CHIPS법, 수출통제 등)을 정리해줘.",
+  materials:"반도체 핵심 소재 수입 의존도와 국산화 시급 소재를 분석해줘.",
+  hscode:"반도체 HS Code 기반 국가별 기술 수준과 수요를 분석해줘.",
+  supply:"반도체 수급 불안정성을 예측하고 리스크를 분석해줘.",
+  power:"전력 반도체(SiC, GaN) 최적 수급 전략을 분석해줘.",
+  engineering:"반도체 전자공학 핵심 지표를 정리해줘.",
+};
+
+const GLOSSARY = {
+  "HBM":{ full:"High Bandwidth Memory", def:"여러 개의 D램을 수직으로 쌓아 데이터 통로(TSV)로 연결한 고대역폭 메모리. AI 서버 GPU에 필수 탑재되며 SK하이닉스가 선두." },
+  "EUV":{ full:"Extreme Ultraviolet Lithography", def:"13.5nm 파장의 극자외선으로 초미세 회로를 새기는 노광 기술. ASML이 세계 유일 공급사." },
+  "CoWoS":{ full:"Chip on Wafer on Substrate", def:"TSMC의 2.5D 첨단 패키징 기술. 여러 칩(로직+HBM)을 하나의 기판 위에 나란히 배치·연결." },
+  "GAA":{ full:"Gate-All-Around", def:"트랜지스터 게이트가 채널을 4면에서 감싸는 차세대 구조. 삼성이 3nm에서 세계 최초로 도입." },
+  "FinFET":{ full:"Fin Field-Effect Transistor", def:"채널이 지느러미 모양으로 세워진 트랜지스터 구조. 7nm~5nm급 공정의 주력 구조." },
+  "CHIPS법":{ full:"CHIPS and Science Act", def:"2022년 미국이 제정한 반도체 산업 지원법. 자국 내 생산시설 투자에 527억달러 보조금 지급." },
+  "SiC":{ full:"Silicon Carbide (탄화규소)", def:"실리콘보다 항복전압이 10배 높은 화합물 반도체 소재. 전기차 인버터에 사용." },
+  "GaN":{ full:"Gallium Nitride (질화갈륨)", def:"전자이동도가 뛰어난 화합물 반도체. 고속 충전기, 데이터센터 전력공급에 활용." },
+  "CMP":{ full:"Chemical Mechanical Planarization", def:"화학적 연마와 기계적 연마를 동시에 적용해 웨이퍼 표면을 평탄화하는 공정." },
+  "불화수소":{ full:"Hydrogen Fluoride (HF)", def:"반도체 세정·식각 핵심 소재. 2019년 일본 수출규제 3대 품목 중 하나." },
+  "포토레지스트":{ full:"Photoresist (PR)", def:"노광 공정에서 빛에 반응해 회로 패턴을 형성하는 감광액. EUV용은 일본 의존도 90%+." },
+  "파운드리":{ full:"Foundry", def:"반도체 설계 없이 위탁 생산만 전담하는 제조 기업. TSMC·삼성이 대표적." },
+  "팹리스":{ full:"Fabless", def:"자체 생산라인 없이 설계만 전담하는 반도체 기업. NVIDIA·퀄컴·애플 등." },
+  "8542":{ full:"HS Code 8542", def:"국제무역 전자집적회로 품목분류코드. 프로세서(31), 메모리(32) 등으로 세분화." },
+  "HS코드":{ full:"Harmonized System Code", def:"국제 표준 무역 품목 분류 코드. 국가 간 수출입 통계·관세 부과 기준." },
+  "TSV":{ full:"Through Silicon Via", def:"실리콘 웨이퍼를 수직 관통하는 전극. HBM처럼 칩을 3D로 쌓을 때 층간 신호를 전달." },
+  "다마신":{ full:"Damascene Process", def:"절연막에 홈을 파고 구리를 채운 뒤 CMP로 평탄화하는 배선 형성 공법." },
+  "APC":{ full:"Advanced Process Control", def:"AI·통계 기반으로 공정 변수를 실시간 모니터링·자동 보정하는 수율 관리 시스템." },
+  "번인":{ full:"Burn-in Test", def:"고온·고전압을 가해 초기 불량품을 조기에 걸러내는 신뢰성 테스트." },
+  "이온주입":{ full:"Ion Implantation", def:"고에너지 도펀트 이온을 웨이퍼에 주입해 N형·P형 특성을 부여하는 공정." },
+  "수출통제":{ full:"Export Control (EAR)", def:"미국 상무부가 첨단 AI칩·장비의 특정국 수출을 제한하는 규제 체계." },
+  "팹":{ full:"Fab (Fabrication Plant)", def:"반도체를 실제로 생산하는 제조 공장. 클린룸 환경에서 운영." },
+  "수율":{ full:"Yield", def:"생산된 웨이퍼 중 정상 작동하는 칩의 비율. 첨단 공정 초기엔 50~60% 수준." },
+  "웨이퍼":{ full:"Wafer", def:"반도체 회로를 새기는 얇은 원판. 실리콘 단결정을 얇게 썰어 만듦." },
+  "다이":{ full:"Die", def:"웨이퍼를 절단해 얻은 개별 반도체 칩 조각." },
+  "DRAM":{ full:"Dynamic Random Access Memory", def:"휘발성 메모리. 데이터를 임시 저장하며 전원이 꺼지면 소실됨. 삼성·SK하이닉스·마이크론 과점." },
+  "NAND":{ full:"NAND Flash Memory", def:"비휘발성 저장장치 메모리. SSD·USB의 핵심 부품." },
+  "ASIC":{ full:"Application-Specific IC", def:"특정 용도에 맞춰 설계된 주문형 반도체. 구글 TPU 등이 대표적." },
+  "FPGA":{ full:"Field-Programmable Gate Array", def:"제조 후에도 회로를 재프로그래밍할 수 있는 반도체." },
+  "칩렛":{ full:"Chiplet", def:"큰 칩을 여러 개의 작은 칩으로 나눠 패키징 단계에서 조합하는 설계 방식." },
+  "OSAT":{ full:"Outsourced Semiconductor Assembly and Test", def:"반도체 후공정(패키징·테스트)을 위탁 전담하는 기업. ASE·Amkor가 대표적." },
+  "IDM":{ full:"Integrated Device Manufacturer", def:"설계부터 생산까지 모두 자체 수행하는 종합반도체기업. 삼성·인텔이 대표적." },
+  "리드타임":{ full:"Lead Time", def:"주문부터 실제 납품까지 걸리는 기간. AI GPU는 현재 52주 이상 소요." },
+  "업다운사이클":{ full:"Up/Down Cycle", def:"반도체 산업 특유의 수요-공급 호황/불황 반복 주기(실리콘 사이클)." },
+  "Entity List":{ full:"미국 상무부 거래제한 명단", def:"미국이 수출통제 대상으로 지정한 외국 기업 목록. 화웨이·SMIC 등이 포함." },
+  "FEOC":{ full:"Foreign Entity of Concern", def:"미국이 보조금 수혜에서 배제하는 외국우려기업 규정. 중국·러시아 연관 기업 대상." },
+  "라피더스":{ full:"Rapidus", def:"일본 정부 주도로 설립된 반도체 기업. TSMC·IBM과 협력해 2nm 공정에 도전." },
+  "Wassenaar체제":{ full:"바세나르 체제", def:"재래식무기·이중용도 품목의 수출을 통제하는 다자간 국제 체제. 반도체 장비 수출통제 근거로도 활용." },
+  "K-반도체벨트":{ full:"K-반도체 전략", def:"한국 정부의 반도체 산업 육성 전략. 2030년까지 510조원 민간 투자 유도 목표." },
+  "온디바이스AI":{ full:"On-device AI", def:"클라우드 서버 없이 스마트폰·PC 자체에서 AI 연산을 처리하는 방식. 저전력 NPU 칩이 핵심." },
+  "NPU":{ full:"Neural Processing Unit", def:"AI 연산에 특화된 전용 프로세서. 스마트폰·PC의 온디바이스 AI 처리를 담당." },
+};
+
+const GLOSSARY_KEYS = Object.keys(GLOSSARY).sort((a,b)=>b.length-a.length);
+
+// 5단계 전망: 매우긍정 · 긍정 · 중립 · 주의 · 부정
+const COUNTRY_OUTLOOK = {
+  overview: [
+    { flag:"🇰🇷", name:"한국", outlook:"긍정", note:"HBM 독점적 지위, 메모리 반등 사이클 수혜", invest:"메모리·HBM 밸류체인 비중 확대 고려" },
+    { flag:"🇺🇸", name:"미국", outlook:"매우긍정", note:"AI GPU 수요 독점, NVIDIA 중심 생태계 강세", invest:"팹리스·AI 인프라 기업 우선 검토" },
+    { flag:"🇨🇳", name:"중국", outlook:"중립", note:"성숙공정 내재화 가속, 첨단공정은 규제로 제한적", invest:"규제 리스크 감안 시 성숙공정 관련주 선별 접근" },
+    { flag:"🇯🇵", name:"일본", outlook:"긍정", note:"소재·장비 강세, 라피더스 2nm 도전 지속", invest:"소재·장비주는 안정적 방어주로 매력" },
+    { flag:"🇹🇼", name:"대만", outlook:"매우긍정", note:"TSMC 파운드리 압도적 지위 유지", invest:"지정학 리스크 분산 전제 하 핵심 비중 유지" },
+  ],
+  trade: [
+    { flag:"🇰🇷", name:"한국", outlook:"긍정", note:"대중 비중 축소, 미국·유럽向 수출 다변화 중", invest:"공급망 다변화 수혜 기업 주목" },
+    { flag:"🇺🇸", name:"미국", outlook:"긍정", note:"CHIPS법 보조금으로 자국 생산 확대", invest:"미국 내 팹 건설 관련 장비·건설주" },
+    { flag:"🇨🇳", name:"중국", outlook:"부정", note:"수입 의존 지속, 자급률 목표 미달, 규제 심화", invest:"수출 규제 영향 지속 관찰 필요, 비중 축소 검토" },
+    { flag:"🇯🇵", name:"일본", outlook:"긍정", note:"TSMC 유치로 생산 비중 확대", invest:"구마모토 인근 공급망 기업 관심" },
+    { flag:"🇹🇼", name:"대만", outlook:"중립", note:"해외 팹 분산으로 집중도 완화, 지정학 리스크 상존", invest:"지정학 헤지 차원 분산 투자 권고" },
+  ],
+  tech: [
+    { flag:"🇰🇷", name:"한국", outlook:"긍정", note:"HBM3E/4 리더십, 3nm GAA 수율 개선 중", invest:"HBM 공급망 최우선 투자처로 판단" },
+    { flag:"🇺🇸", name:"미국", outlook:"매우긍정", note:"18A 공정 개발, AI칩 설계 압도적 우위", invest:"차세대 AI 칩셋 설계기업 주목" },
+    { flag:"🇨🇳", name:"중국", outlook:"주의", note:"7nm 확인 수준, EUV 접근 불가로 첨단공정 제한적", invest:"기술 격차 지속 시 단기 고밸류 부담 유의" },
+    { flag:"🇯🇵", name:"일본", outlook:"중립", note:"라피더스 2nm 도전, 상용화까지 시간 필요", invest:"중장기 관점의 선별적 접근 권고" },
+    { flag:"🇹🇼", name:"대만", outlook:"매우긍정", note:"2nm 최선두, CoWoS 증설 지속", invest:"첨단 패키징 관련 공급사 주목" },
+  ],
+  materials: [
+    { flag:"🇰🇷", name:"한국", outlook:"주의", note:"국산화 진행 중이나 EUV PR 등 핵심 소재 취약", invest:"국산화 성공 기업 선별 투자" },
+    { flag:"🇺🇸", name:"미국", outlook:"긍정", note:"CMP 슬러리 등 일부 소재 강세", invest:"소재 공급망 다변화 수혜주 검토" },
+    { flag:"🇨🇳", name:"중국", outlook:"긍정", note:"희토류 자원 무기화로 협상력 우위", invest:"희토류 대체 기술 개발기업 주목" },
+    { flag:"🇯🇵", name:"일본", outlook:"매우긍정", note:"불화수소·PR 등 핵심 소재 세계 최강", invest:"소재 원천기업 안정적 배당주로 매력" },
+    { flag:"🇹🇼", name:"대만", outlook:"주의", note:"소재 대부분 수입 의존, 자체 생산 기반 약함", invest:"공급 안정성 이슈 지속 모니터링 필요" },
+  ],
+  hscode: [
+    { flag:"🇰🇷", name:"한국", outlook:"긍정", note:"8542.32(메모리) 세계 최상위 경쟁력", invest:"메모리 관련 수출 데이터 추적 유효" },
+    { flag:"🇺🇸", name:"미국", outlook:"매우긍정", note:"8486(장비) 부문 독점적 지위", invest:"반도체 장비주 지속 보유 매력적" },
+    { flag:"🇨🇳", name:"중국", outlook:"중립", note:"8542.31 수입 의존, 자국 대체 시도 중", invest:"수입대체 정책 수혜주 제한적 접근" },
+    { flag:"🇯🇵", name:"일본", outlook:"중립", note:"소재·부품 코드 강세, 완제품 코드는 약세", invest:"부품·소재 코드 중심 분석 권장" },
+    { flag:"🇹🇼", name:"대만", outlook:"매우긍정", note:"8542 전체 코드 수출 세계 1위", invest:"파운드리 비중 최우선 고려 지속" },
+  ],
+  supply: [
+    { flag:"🇰🇷", name:"한국", outlook:"긍정", note:"HBM 공급 집중, 가격 결정력 보유", invest:"공급 부족 국면 지속 시 가격 상승 수혜" },
+    { flag:"🇺🇸", name:"미국", outlook:"주의", note:"AI GPU 리드타임 52주+, 병목 심화", invest:"공급 병목 해소 시점까지 밸류에이션 유의" },
+    { flag:"🇨🇳", name:"중국", outlook:"중립", note:"성숙공정 공급 과잉 우려 상존", invest:"과잉공급 국면 시 가격 하락 리스크 대비" },
+    { flag:"🇯🇵", name:"일본", outlook:"긍정", note:"장비 리드타임 길지만 안정적 수주잔고", invest:"수주잔고 기반 장비주 안정적 접근" },
+    { flag:"🇹🇼", name:"대만", outlook:"주의", note:"자연재해·지정학 리스크로 공급 중단 우려", invest:"공급망 리스크 헤지 수단 마련 권고" },
+  ],
+  power: [
+    { flag:"🇰🇷", name:"한국", outlook:"중립", note:"SiC 국산화 2027년 목표, 아직 초기 단계", invest:"장기 투자 관점의 씨앗 투자 검토" },
+    { flag:"🇺🇸", name:"미국", outlook:"매우긍정", note:"Wolfspeed 등 SiC 웨이퍼 세계 1위", invest:"SiC 웨이퍼 공급사 우선 검토" },
+    { flag:"🇨🇳", name:"중국", outlook:"긍정", note:"BYD 중심 SiC 내재화 급성장, 저가 공세", invest:"가격 경쟁 심화 리스크 감안 필요" },
+    { flag:"🇯🇵", name:"일본", outlook:"긍정", note:"로옴 GaN 강세, 전력반도체 전통 강자", invest:"GaN 파워 소자 기업 관심" },
+    { flag:"🇹🇼", name:"대만", outlook:"주의", note:"전력반도체보다 로직 중심, 상대적 열세", invest:"우선순위는 낮으나 후공정 참여 여지" },
+  ],
+  engineering: [
+    { flag:"🇰🇷", name:"한국", outlook:"중립", note:"TSMC 대비 0.5세대 격차, 추격 지속", invest:"수율 개선 모멘텀 확인 후 비중 확대 고려" },
+    { flag:"🇺🇸", name:"미국", outlook:"긍정", note:"18A 공정으로 격차 축소 시도, 설계력 최상", invest:"공정 전환 성공 여부가 투자 판단 분기점" },
+    { flag:"🇨🇳", name:"중국", outlook:"부정", note:"3~4세대 기술 격차 지속, 장비 접근 제한", invest:"기술 자립 성과 가시화 전까지 보수적 접근" },
+    { flag:"🇯🇵", name:"일본", outlook:"중립", note:"라피더스 국가 프로젝트, 상용화 검증 필요", invest:"정부 지원 지속성 확인 후 판단" },
+    { flag:"🇹🇼", name:"대만", outlook:"매우긍정", note:"공정 기술 세계 1위, 격차 지속 확대", invest:"기술 리더십 프리미엄 정당화 가능" },
+  ],
+};
+
+const TAB_DATA = {
+  overview: {
+    kpis: [
+      { label:"2024 시장 규모", value:"$6,110억", delta:"+19% YoY", color:"#0284c7" },
+      { label:"2025 전망", value:"$6,970억", delta:"+14% 예상", color:"#22c55e" },
+      { label:"AI 칩 성장률", value:"+35%", delta:"CAGR 2024~30", color:"#f59e0b" },
+      { label:"TSMC 파운드리 점유", value:"61.7%", delta:"2위 삼성 11.3%", color:"#7c3aed" },
+    ],
+    pie: { title:"2024 세그먼트별 시장 점유 비중", labels:["팹리스 설계","메모리","파운드리","장비","소재"], data:[30,27,22,12,9], colors:["#eda100","#2a78d6","#1baf7a","#4a3aa7","#e34948"] },
+    lineChart: { title:"글로벌 반도체 시장 성장 추이 (억달러)", labels:["2020","2021","2022","2023","2024","2025E","2026E"], data:[4400,5559,5735,5268,6110,6970,7800], color:"#2a78d6",
+      reasons:["코로나 팬데믹 재택수요 급증","반도체 슈퍼사이클 정점","공급망 병목 지속","메모리 가격 급락, 재고조정","AI 붐+HBM 수요 폭발","AI 서버 투자 지속 확대","생성형 AI 대중화 가속 전망"] },
+    text:`## 주요 플레이어 현황
+- **TSMC**: 2nm 공정 양산 준비, CoWoS 패키징 증설
+- **삼성전자**: GAA(SF3E) 수율 개선 중, HBM3E 공급 확대
+- **SK하이닉스**: HBM3E 최초 양산, 2024년 영업이익 23조원 돌파
+- **NVIDIA**: AI GPU 공급 부족 지속, 시가총액 3조 달러 돌파
+- **인텔**: 18A 공정 2025년 목표, 파운드리 재편 중
+
+## 지역별 생산 집중도
+- **대만**: 파운드리 세계 생산의 65% 집중
+- **한국**: 메모리 반도체 세계 생산의 60% 이상
+- **중국**: 성숙 공정(28nm+) 내재화 가속`,
+  },
+  trade: {
+    kpis: [
+      { label:"한국 반도체 수출", value:"$1,399억", delta:"전체 수출 21.3%", color:"#0284c7" },
+      { label:"중국 반도체 수입", value:"$3,500억+", delta:"세계 최대 수입국", color:"#e34948" },
+      { label:"대만 파운드리 수출", value:"$1,890억", delta:"세계 1위", color:"#22c55e" },
+      { label:"미국 장비 수출", value:"$230억", delta:"KLA·Lam·AMAT", color:"#eda100" },
+    ],
+    pie: { title:"한국 반도체 수출 국가별 비중", labels:["중국(홍콩포함)","미국","대만","기타"], data:[38,14,8,40], colors:["#e34948","#2a78d6","#eda100","#888"] },
+    lineChart: { title:"한국 반도체 수출 추이 (억달러)", labels:["2019","2020","2021","2022","2023","2024"], data:[939,992,1280,1292,986,1399], color:"#1baf7a",
+      reasons:["미중 무역분쟁으로 위축","코로나 비대면 수요 증가","메모리 슈퍼사이클 정점","고금리+재고과잉 여파 시작","메모리 가격 급락 저점","HBM 수요 폭발로 급반등"] },
+    text:`## 국가별 무역 현황
+- **한국**: 대중 규제 영향으로 미국·유럽 비중 확대 중
+- **대만**: TSMC 중심 파운드리, 수출의 40%가 반도체
+- **중국**: 자급률 목표 2025년 70% (현재 약 20%)
+- **일본**: 구마모토 TSMC 팹 가동으로 생산 비중 증가
+- **미국**: CHIPS법으로 자국 생산 확대 추진
+
+## 공급망 재편 이슈
+- 미중 디커플링 → 탈중국 공급망 구축 가속
+- 인도·베트남·멕시코 후공정 이전 증가`,
+  },
+  tech: {
+    kpis: [
+      { label:"HBM3E 대역폭", value:"1.18TB/s", delta:"12단 적층", color:"#0284c7" },
+      { label:"N2 트랜지스터 밀도", value:"1.7억/mm²", delta:"N3 대비 +15%", color:"#22c55e" },
+      { label:"EUV High-NA 가격", value:"4,000억원", delta:"ASML EXE:5000", color:"#f59e0b" },
+      { label:"3→2nm 전력효율", value:"+30%", delta:"동일 성능 기준", color:"#7c3aed" },
+    ],
+    pie: { title:"차세대 트랜지스터 구조 채택 비중 (2025 전망)", labels:["GAA","FinFET","기타"], data:[45,50,5], colors:["#2a78d6","#888","#eda100"] },
+    lineChart: { title:"HBM 대역폭 세대별 진화 (GB/s)", labels:["HBM1","HBM2","HBM2E","HBM3","HBM3E","HBM4(E)"], data:[128,256,460,819,1180,2000], color:"#0284c7",
+      reasons:["최초 세대, 초기 규격","대역폭 2배 확장","클럭 속도 개선","3세대 아키텍처 전환","12단 적층 상용화","차세대 규격 개발 중"] },
+    text:`## AI 반도체·첨단 패키징
+- **HBM3E 12단**: SK하이닉스 세계 최초 양산
+- **CoWoS**: TSMC 2.5D 인터포저, AI 서버 필수 패키징
+- **HBM4**: 2025년 하반기 양산 예정
+
+## 공정 기술 경쟁
+- **TSMC N2**: GAA 도입, 2025년 하반기 양산
+- **삼성 SF3E**: 세계 최초 GAA 3nm 양산
+- **인텔 18A**: RibbonFET+PowerVia, 2025년 목표`,
+  },
+  news: {
+    kpis: [
+      { label:"NVIDIA 시총", value:"$3조+", delta:"세계 1위 등극", color:"#22c55e" },
+      { label:"SK하이닉스 영업이익", value:"23조원", delta:"역대 최대", color:"#0284c7" },
+      { label:"인텔 감원", value:"1.5만명", delta:"구조조정", color:"#e34948" },
+      { label:"TSMC 美팹 투자", value:"$650억", delta:"애리조나 3개 팹", color:"#f59e0b" },
+    ],
+    pie: { title:"2024년 반도체 기업 매출 비중 (상위 6개사)", labels:["NVIDIA","삼성","TSMC","SK하이닉스","인텔","마이크론"], data:[27,20,19,13,12,9], colors:["#22c55e","#2a78d6","#1baf7a","#eda100","#4a3aa7","#e34948"] },
+    lineChart: { title:"NVIDIA 분기 데이터센터 매출 (억달러)", labels:["Q123","Q223","Q323","Q423","Q124","Q224","Q324","Q424"], data:[37,103,145,184,226,263,308,354], color:"#22c55e",
+      reasons:["생성형AI 초기 수요","ChatGPT 열풍 확산","기업 AI 투자 본격화","H100 공급 확대","B100 출시 기대감","Blackwell 사전주문 급증","데이터센터 증설 러시","공급 부족 지속에도 매출 성장"] },
+    text:`## 주요 기업 동향
+- **NVIDIA**: Blackwell 출시, GPU 리드타임 52주+
+- **삼성전자**: HBM3E 공급 지연으로 2024년 고전
+- **SK하이닉스**: HBM3E 12단 세계 최초 양산
+- **TSMC**: 2nm 양산 준비, 애리조나 1공장 가동
+- **인텔**: 파운드리 독립 검토, 신임 CEO 취임`,
+  },
+  policy: {
+    kpis: [
+      { label:"미국 CHIPS법", value:"$527억", delta:"보조금 집행 중", color:"#2a78d6" },
+      { label:"중국 반도체 펀드 3기", value:"3,440억위안", delta:"약 47조원", color:"#e34948" },
+      { label:"일본 반도체 투자", value:"10조엔", delta:"5개년 계획", color:"#eda100" },
+      { label:"한국 민간 투자 유도", value:"510조원", delta:"2030년까지", color:"#1baf7a" },
+    ],
+    pie: { title:"국가별 정부 지원 규모 비중", labels:["일본","미국","중국(3기)","EU","한국","인도"], data:[29,22,20,19,3,4], colors:["#eda100","#2a78d6","#e34948","#4a3aa7","#1baf7a","#eb6834"] },
+    lineChart: { title:"미국 대중 수출통제 강화 추이 (강도지수)", labels:["2018","2019","2020","2021","2022","2023","2024"], data:[20,35,50,60,80,90,95], color:"#e34948",
+      reasons:["미중 무역전쟁 시작","화웨이 제재 개시","엔티티리스트 확대","바이든 정부 추가 통제","첨단장비 수출금지 발표","동맹국 동참 확대","AI칩 통제 세분화"] },
+    text:`## 주요 정책 현황
+- **미국 CHIPS법**: TSMC·삼성·인텔 보조금 확정
+- **수출통제(EAR)**: 첨단 AI칩·EUV 장비 중국 수출 금지
+- **중국 반도체 굴기**: 국가펀드 3기 출범
+
+## 규제 강화 추세
+- 일본·네덜란드 미국 동조, 장비 수출규제 확대
+- 한국 반도체 특별법 추진 중`,
+  },
+  materials: {
+    kpis: [
+      { label:"EUV PR 일본 의존", value:"90%+", delta:"국산화율 5% 미만", color:"#e34948" },
+      { label:"불화수소 일본 의존", value:"50%", delta:"규제 전 94%→개선", color:"#f59e0b" },
+      { label:"희토류 중국 의존", value:"80~90%", delta:"수출제한 발동", color:"#e34948" },
+      { label:"NF₃ 국산화", value:"세계 1위", delta:"완료", color:"#22c55e" },
+    ],
+    pie: { title:"한국 핵심 소재 공급국 비중", labels:["일본","미국","중국","국내산","기타"], data:[38,18,15,22,7], colors:["#e34948","#2a78d6","#eda100","#1baf7a","#888"] },
+    barChart: { title:"국산화 시급도 순위 (10점 만점)", labels:["EUV PR","희토류","고순도 HF","WF₆","CMP패드"], data:[9.5,8.8,8.2,7.0,6.0], colors:["#e34948","#e34948","#f59e0b","#eda100","#1baf7a"],
+      reasons:["국산화율 5%미만, 최우선","중국 수출제한 리스크","고순도 12N급 아직 의존","일본 의존 지속","상대적으로 진척 있음"] },
+    text:`## 핵심 소재별 현황
+- **EUV 포토레지스트**: 일본 과점, 국산화 최우선 과제
+- **불화수소**: 국산화 성과, 고순도 12N급은 일본 의존 지속
+- **희토류**: 중국 수출 제한, 대체 공급처 발굴 시급`,
+  },
+  hscode: {
+    kpis: [
+      { label:"8542.31 AI칩 성장률", value:"+35%", delta:"CAGR 2024~2030", color:"#0284c7" },
+      { label:"8542.32 메모리 성장률", value:"+22%", delta:"HBM 수요 주도", color:"#22c55e" },
+      { label:"8486 장비 성장률", value:"+18%", delta:"각국 팹 건설 수요", color:"#f59e0b" },
+      { label:"한국 8542 수출", value:"$1,250억", delta:"세계 2위", color:"#7c3aed" },
+    ],
+    pie: { title:"8542 코드 국가별 수출 비중", labels:["대만","한국","중국","미국","기타"], data:[38,25,14,8,15], colors:["#2a78d6","#1baf7a","#e34948","#eda100","#888"] },
+    lineChart: { title:"HS Code별 수요 성장 예측 (2024=100)", labels:["2024","2025E","2026E","2027E","2028E","2030E"], data:[100,135,182,246,332,605], color:"#2a78d6",
+      reasons:["기준연도","AI 서버 투자 확대","HBM4 양산 개시","2nm 양산 본격화","차세대 AI 대중화","엣지 AI까지 확산"] },
+    text:`## 주요 HS Code
+- **8542.31**: 프로세서·컨트롤러 (AI GPU, CPU 포함)
+- **8542.32**: 메모리 회로 (DRAM·NAND·HBM)
+- **8486.XX**: 반도체 제조장비`,
+  },
+  supply: {
+    kpis: [
+      { label:"AI GPU 리드타임", value:"52주+", delta:"공급 심각 부족", color:"#e34948" },
+      { label:"DRAM 가격 추세", value:"↑ 상승", delta:"2024 하반기 반등", color:"#22c55e" },
+      { label:"NAND 재고지수", value:"정상화", delta:"과잉 해소", color:"#f59e0b" },
+      { label:"성숙공정 리스크", value:"저위험", delta:"중국 과잉 공급", color:"#1baf7a" },
+    ],
+    pie: { title:"품목별 리스크 비중 (가중치)", labels:["AI GPU/HBM","EUV 장비","희토류","DRAM","기타"], data:[32,28,20,12,8], colors:["#e34948","#e34948","#f59e0b","#eda100","#888"] },
+    lineChart: { title:"DRAM 현물가 추이 (DDR4 8Gb, $)", labels:["Q123","Q223","Q323","Q423","Q124","Q224","Q324","Q424"], data:[2.1,1.8,1.6,1.9,2.4,2.8,3.2,3.5], color:"#2a78d6",
+      reasons:["금리인상+재고과잉 시작","수요둔화로 하락 지속","바닥 확인, 감산 효과","재고소진, 반등 시작","AI서버 수요 견인","가격 협상력 회복","공급부족 지속","상승세 유지"] },
+    text:`## 수급 사이클 분석
+- **단기 노이즈**: AI 서버 투자 일시 둔화
+- **장기 추세**: AI·자율주행 구조적 수요 성장
+- **실리콘 사이클**: 2024~25년 상승, 2026년 조정 가능성`,
+  },
+  power: {
+    kpis: [
+      { label:"전력반도체 시장(2024)", value:"$260억", delta:"→2030년 $500억", color:"#f59e0b" },
+      { label:"SiC 항복전압", value:"10,000V", delta:"Si 대비 10배", color:"#0284c7" },
+      { label:"GaN 전자이동도", value:"2,000cm²/Vs", delta:"Si의 1.4배", color:"#22c55e" },
+      { label:"SiC 열전도율", value:"490W/mK", delta:"Si의 3.3배", color:"#7c3aed" },
+    ],
+    pie: { title:"전력반도체 소재별 시장 비중 (2030 전망)", labels:["SiC","GaN","Si(전통)"], data:[20,6,74], colors:["#2a78d6","#1baf7a","#888"] },
+    lineChart: { title:"SiC 전력반도체 시장 전망 (억달러)", labels:["2022","2023","2024","2025E","2026E","2028E","2030E"], data:[20,28,38,53,68,90,100], color:"#2a78d6",
+      reasons:["EV 초기 채택 단계","EV 판매 확대","가격 하락으로 채택 가속","완성차 대량 적용 시작","데이터센터 전력 수요 추가","시장 성숙기 진입","성장률 둔화, 안정화"] },
+    text:`## 국가별 공급 구조
+- **미국**: Wolfspeed(SiC 웨이퍼 세계 1위)
+- **일본**: 로옴·도시바 (GaN 강세)
+- **중국**: BYD·SICC (SiC 내재화 급성장)`,
+  },
+  engineering: {
+    kpis: [
+      { label:"TSMC N3 밀도", value:"1.7억/mm²", delta:"7nm 대비 약 2배", color:"#0284c7" },
+      { label:"3nm 전력효율 향상", value:"+35~40%", delta:"7nm 대비", color:"#22c55e" },
+      { label:"첨단공정 초기 수율", value:"50~60%", delta:"양산 목표 85%+", color:"#f59e0b" },
+      { label:"한중 기술 격차", value:"3~4세대", delta:"유지 중", color:"#7c3aed" },
+    ],
+    pie: { title:"장비 공급사 국가별 점유 비중", labels:["미국","네덜란드(ASML)","일본","기타"], data:[42,28,22,8], colors:["#2a78d6","#eda100","#e34948","#888"] },
+    barChart: { title:"공정 기술 경쟁력 지수 (10점 만점)", labels:["TSMC","삼성","인텔","SMIC","라피더스"], data:[9.8,8.5,7.5,5.0,4.0], colors:["#2a78d6","#1baf7a","#eda100","#e34948","#4a3aa7"],
+      reasons:["2nm 최선두, 압도적 1위","GAA 최초 도입, 추격중","18A 개발, 반등 시도","EUV 접근불가로 정체","국가프로젝트, 검증단계"] },
+    text:`## 국산화 시급도
+- **즉시 투자**: EUV PR, 고순도 HF, 희토류
+- **중기 목표**: CMP 슬러리, WF₆ 가스
+
+## 최신 기술 동향
+- **GAA**: 삼성 3nm 최초 적용
+- **CFET**: 2030년 이후 후속 기술`,
+  },
+};
+
+// 공정 단계: 실제 사진(있으면 표시) + 실패 시 SVG 일러스트로 대체, 설명은 이미지 아래 캡션으로 배치(겹침 방지)
+const PROCESS_STEPS = [
+  { step:1, title:"웨이퍼 제조", subtitle:"Wafer Fabrication", shape:"ingot",
+    photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Silicon_Ingot.jpg/400px-Silicon_Ingot.jpg",
+    captions:["단결정 실리콘 잉곳 — 1,414°C에서 성장","300mm 웨이퍼로 슬라이싱 후 폴리싱"],
+    points:["고순도 실리콘(9N급) — SiO₂ 모래에서 추출","초크랄스키법(CZ법)으로 단결정 잉곳 성장","다이아몬드 와이어쏘로 두께 ~775μm 절단","CMP로 표면 평탄화, 거칠기 0.1nm 이하"] },
+  { step:2, title:"산화", subtitle:"Oxidation", shape:"furnace",
+    photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Diffusion_Furnace.jpg/400px-Diffusion_Furnace.jpg",
+    captions:["고온 퍼니스 900~1200°C 가열","SiO₂ 절연막 1~10nm 형성"],
+    points:["열산화: 고온에서 SiO₂ 절연막 형성","건식 산화: 얇고 고품질 (게이트 산화막)","습식 산화: 두꺼운 산화막 빠르게 형성"] },
+  { step:3, title:"포토리소그래피", subtitle:"Photolithography", shape:"euv",
+    photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/ASML_NXE3400B.jpg/400px-ASML_NXE3400B.jpg",
+    captions:["ASML EUV 노광장비 — 대당 약 4,000억원","13.5nm 파장으로 회로 패턴 전사"],
+    points:["포토레지스트 스핀코팅 (수십~수백 nm)","EUV(13.5nm) 또는 ArF(193nm) 광원으로 노광","OPC 적용, CD-SEM으로 선폭 측정"] },
+  { step:4, title:"식각", subtitle:"Etching", shape:"plasma",
+    photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Plasma_etching_reactor.jpg/400px-Plasma_etching_reactor.jpg",
+    captions:["플라즈마 반응기 (RIE / ICP-RIE)","CF₄·Cl₂·HBr 가스로 수직 식각"],
+    points:["건식 식각: 플라즈마 이용, 수직 프로파일","습식 식각: HF·KOH 용액, 등방성","원자층 식각(ALE): 3nm 이하 공정 필수"] },
+  { step:5, title:"이온 주입", subtitle:"Ion Implantation", shape:"implant",
+    photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Ion_implanter_schematic.svg/400px-Ion_implanter_schematic.svg.png",
+    captions:["이온 빔 가속기 1keV~수MeV","N형·P형 도펀트 주입"],
+    points:["N형(인,비소)/P형(붕소) 도펀트 주입","에너지로 주입 깊이 제어","어닐링(RTA): 결정 손상 복구"] },
+  { step:6, title:"박막 증착", subtitle:"Thin Film Deposition", shape:"cvd",
+    photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Cvd_reactor.png/400px-Cvd_reactor.png",
+    captions:["CVD 반응로 (화학기상증착)","ALD로 원자층씩 정밀 증착"],
+    points:["CVD: LPCVD·PECVD·MOCVD","ALD: High-k 절연막(HfO₂)","PVD(스퍼터링): 금속 배선 Cu"] },
+  { step:7, title:"CMP", subtitle:"Chemical Mechanical Planarization", shape:"cmp",
+    photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/CMP_schematic.svg/400px-CMP_schematic.svg.png",
+    captions:["폴리우레탄 패드로 슬러리 연마","단차 평탄화, 7nm 이하는 20회+ 반복"],
+    points:["다층 배선 형성 시 단차 평탄화","슬러리: SiO₂·CeO₂ 연마 입자","7nm 이하 공정: 20회 이상 반복"] },
+  { step:8, title:"금속 배선", subtitle:"Metallization", shape:"metal",
+    photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Copper_interconnect.jpg/400px-Copper_interconnect.jpg",
+    captions:["Cu 다층 배선 15~20층 (로직칩)","다마신 공정, TaN/Ta 배리어메탈"],
+    points:["다마신 공정: 홈 파고 Cu 매립 후 CMP","배리어 메탈: TaN/Ta — Cu 확산 방지","로직칩 15~20층, DRAM 5~10층"] },
+  { step:9, title:"전공정 검사", subtitle:"In-line Inspection", shape:"sem",
+    photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Scanning_Electron_Microscope_%28SEM%29.jpg/400px-Scanning_Electron_Microscope_%28SEM%29.jpg",
+    captions:["CD-SEM 장비로 임계치수 측정","AI 결함 분류, APC 수율 관리"],
+    points:["CD-SEM: 임계치수 측정","전기적 테스트: 누설전류·저항 측정","AI 기반 결함 분류, APC 수율 관리"] },
+  { step:10, title:"패키징", subtitle:"Packaging", shape:"hbm",
+    photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/HBM2_Samsung.jpg/400px-HBM2_Samsung.jpg",
+    captions:["HBM 3D 적층, TSV 관통전극","CoWoS 2.5D — HBM+로직 통합"],
+    points:["다이싱 후 다이 어태치","CoWoS: 2.5D 인터포저, HBM+로직 통합","HBM: 3D 적층, TSV 관통전극"] },
+  { step:11, title:"최종 테스트", subtitle:"Final Test", shape:"probe",
+    photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Wafer_probe.jpg/400px-Wafer_probe.jpg",
+    captions:["웨이퍼 프로브로 전기적 테스트","번인: 고온·고전압으로 조기 불량 선별"],
+    points:["번인(Burn-in): 고온·고전압 가속 테스트","ATE 자동 테스트 장비로 기능 검증","초기 수율 50~60% → 양산 85%+"] },
+];
+
+function ProcessIllustration({ shape }) {
+  const common = { width:"100%", height:220, viewBox:"0 0 400 220" };
+  const bg = <rect width="400" height="220" fill="#0a1526"/>;
+  switch(shape) {
+    case "ingot": return (
+      <svg {...common}>{bg}
+        <ellipse cx="200" cy="55" rx="55" ry="18" fill="#94a3b8"/>
+        <rect x="145" y="55" width="110" height="110" fill="#cbd5e1"/>
+        <ellipse cx="200" cy="165" rx="55" ry="18" fill="#64748b"/>
+      </svg>);
+    case "furnace": return (
+      <svg {...common}>{bg}
+        <rect x="120" y="35" width="160" height="150" rx="8" fill="#3f2d1f" stroke="#7c5a3a" strokeWidth="3"/>
+        <rect x="140" y="55" width="120" height="110" fill="#e34948" opacity="0.35"/>
+        <rect x="160" y="75" width="80" height="70" fill="#f59e0b" opacity="0.5"/>
+      </svg>);
+    case "euv": return (
+      <svg {...common}>{bg}
+        <rect x="100" y="45" width="200" height="120" rx="10" fill="#1e293b" stroke="#0284c7" strokeWidth="2"/>
+        <circle cx="200" cy="85" r="22" fill="#0284c7" opacity="0.7"/>
+        <line x1="200" y1="107" x2="200" y2="150" stroke="#0284c7" strokeWidth="3"/>
+        <rect x="170" y="150" width="60" height="14" fill="#94a3b8"/>
+      </svg>);
+    case "plasma": return (
+      <svg {...common}>{bg}
+        <rect x="110" y="35" width="180" height="140" rx="8" fill="#1e293b" stroke="#7c3aed" strokeWidth="2"/>
+        <ellipse cx="200" cy="105" rx="65" ry="40" fill="#7c3aed" opacity="0.35"/>
+        <ellipse cx="200" cy="105" rx="35" ry="22" fill="#c4b5fd" opacity="0.5"/>
+      </svg>);
+    case "implant": return (
+      <svg {...common}>{bg}
+        <rect x="90" y="90" width="220" height="16" fill="#334155"/>
+        {[130,180,230,270].map((x,i)=><circle key={i} cx={x} cy="60" r="5" fill="#22c55e"/>)}
+        {[130,180,230,270].map((x,i)=><line key={i} x1={x} y1="66" x2={x} y2="90" stroke="#22c55e" strokeWidth="2"/>)}
+        <rect x="90" y="106" width="220" height="55" fill="#1e293b"/>
+      </svg>);
+    case "cvd": return (
+      <svg {...common}>{bg}
+        <rect x="130" y="25" width="140" height="160" rx="8" fill="#1e293b" stroke="#1baf7a" strokeWidth="2"/>
+        {[55,85,115,145].map((y,i)=><rect key={i} x="150" y={y} width="100" height="8" fill="#1baf7a" opacity={0.3+i*0.15}/>)}
+      </svg>);
+    case "cmp": return (
+      <svg {...common}>{bg}
+        <circle cx="200" cy="105" r="70" fill="#334155" stroke="#f59e0b" strokeWidth="3"/>
+        <circle cx="200" cy="105" r="40" fill="#f59e0b" opacity="0.3"/>
+        <circle cx="200" cy="105" r="15" fill="#f59e0b" opacity="0.6"/>
+      </svg>);
+    case "metal": return (
+      <svg {...common}>{bg}
+        {[0,1,2,3,4].map(i=><rect key={i} x={100+i*10} y={35+i*30} width={200-i*20} height="14" fill="#eb6834" opacity={0.4+i*0.12}/>)}
+      </svg>);
+    case "sem": return (
+      <svg {...common}>{bg}
+        <rect x="150" y="25" width="100" height="145" rx="6" fill="#1e293b" stroke="#0284c7" strokeWidth="2"/>
+        <circle cx="200" cy="75" r="18" fill="#0284c7" opacity="0.6"/>
+        <line x1="200" y1="93" x2="200" y2="150" stroke="#0284c7" strokeWidth="2"/>
+        <rect x="170" y="150" width="60" height="16" fill="#64748b"/>
+      </svg>);
+    case "hbm": return (
+      <svg {...common}>{bg}
+        {[0,1,2,3].map(i=><rect key={i} x="140" y={135-i*22} width="120" height="18" fill="#2a78d6" opacity={0.5+i*0.12}/>)}
+        {[0,1,2].map(i=><line key={i} x1={160+i*40} y1="47" x2={160+i*40} y2="153" stroke="#0284c7" strokeWidth="2" opacity="0.7"/>)}
+      </svg>);
+    case "probe": return (
+      <svg {...common}>{bg}
+        <rect x="120" y="135" width="160" height="40" fill="#334155"/>
+        {[150,190,230,270].map((x,i)=><line key={i} x1={x} y1="55" x2={x} y2="135" stroke="#e34948" strokeWidth="3"/>)}
+        {[150,190,230,270].map((x,i)=><circle key={i} cx={x} cy="50" r="6" fill="#e34948"/>)}
+      </svg>);
+    default: return <svg {...common}>{bg}</svg>;
+  }
+}
+
+function PieChartSVG({ title, labels, data, colors }) {
+  const total = data.reduce((a,b)=>a+b,0);
+  let angle = -90;
+  const R = 60, CX = 75, CY = 75;
+  const slices = data.map((v,i) => {
+    const frac = v/total, start = angle, sweep = frac*360;
+    angle += sweep;
+    const large = sweep > 180 ? 1 : 0;
+    const x1 = CX + R*Math.cos(start*Math.PI/180), y1 = CY + R*Math.sin(start*Math.PI/180);
+    const x2 = CX + R*Math.cos((start+sweep)*Math.PI/180), y2 = CY + R*Math.sin((start+sweep)*Math.PI/180);
+    return { d:`M${CX},${CY} L${x1},${y1} A${R},${R} 0 ${large} 1 ${x2},${y2} Z`, color:colors[i], pct:Math.round(frac*100) };
+  });
+  return (
+    <div style={{ marginBottom:20 }}>
+      <div style={{ fontSize:12, color:"#64748b", marginBottom:10 }}>{title}</div>
+      <div style={{ display:"flex", gap:20, alignItems:"center", flexWrap:"wrap" }}>
+        <svg width="150" height="150" viewBox="0 0 150 150">
+          {slices.map((s,i)=><path key={i} d={s.d} fill={s.color} opacity="0.9" stroke="#060b18" strokeWidth="1.5"><title>{labels[i]}: {s.pct}%</title></path>)}
+        </svg>
+        <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+          {labels.map((l,i)=>(
+            <div key={i} style={{ display:"flex", alignItems:"center", gap:8, fontSize:12 }}>
+              <span style={{ width:11, height:11, borderRadius:3, background:colors[i], flexShrink:0 }}/>
+              <span style={{ color:"#64748b" }}>{l}</span>
+              <span style={{ color:"#0f172a", fontWeight:700, marginLeft:"auto" }}>{slices[i].pct}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BarChartSVG({ title, labels, data, colors, reasons }) {
+  const max = Math.max(...data);
+  const W=620,H=170,PL=40,PT=20,PB=36,barW=Math.min(48,(W-PL-20)/labels.length-8);
+  const gap=(W-PL-20-barW*labels.length)/(labels.length+1);
+  return (
+    <div style={{ marginBottom:20 }}>
+      <div style={{ fontSize:12, color:"#64748b", marginBottom:4 }}>{title}</div>
+      {reasons && <div style={{ fontSize:10, color:"#64748b", marginBottom:6 }}>💡 막대에 마우스를 올리면 증감 이유가 표시됩니다</div>}
+      <svg width="100%" viewBox={`0 0 ${W} ${H+PT+PB}`} style={{ overflow:"visible" }}>
+        {[0,0.5,1].map((r,i)=><line key={i} x1={PL} y1={PT+H*(1-r)} x2={W-10} y2={PT+H*(1-r)} stroke="rgba(15,23,42,0.09)" strokeWidth="1"/>)}
+        {labels.map((label,i)=>{
+          const bh=(data[i]/max)*H, x=PL+gap*(i+1)+barW*i;
+          return (<g key={i} style={{ cursor: reasons ? "pointer" : "default" }}>
+            <rect x={x} y={PT+H-bh} width={barW} height={bh} fill={colors[i]} rx="3" opacity="0.9">
+              {reasons && <title>{label}: {data[i]} — {reasons[i]}</title>}
+            </rect>
+            <text x={x+barW/2} y={PT+H+14} textAnchor="middle" fontSize="10" fill="#64748b">{label}</text>
+            <text x={x+barW/2} y={PT+H-bh-4} textAnchor="middle" fontSize="10" fill="#64748b">{data[i]}</text>
+          </g>);
+        })}
+      </svg>
+    </div>
+  );
+}
+
+function LineChartSVG({ title, labels, data, color, reasons }) {
+  const min=Math.min(...data), max=Math.max(...data);
+  const W=620,H=140,PL=44,PT=16,PB=32;
+  const px=(i)=>PL+i*(W-PL-10)/(labels.length-1);
+  const py=(v)=>PT+H-(v-min)/(max-min||1)*H;
+  const pts=data.map((v,i)=>`${px(i)},${py(v)}`).join(" ");
+  return (
+    <div style={{ marginBottom:20 }}>
+      <div style={{ fontSize:12, color:"#64748b", marginBottom:4 }}>{title}</div>
+      {reasons && <div style={{ fontSize:10, color:"#64748b", marginBottom:6 }}>💡 점에 마우스를 올리면 증감 이유가 표시됩니다</div>}
+      <svg width="100%" viewBox={`0 0 ${W} ${H+PT+PB}`} style={{ overflow:"visible" }}>
+        {[0,0.5,1].map((r,i)=>(<g key={i}>
+          <line x1={PL} y1={PT+H*(1-r)} x2={W-10} y2={PT+H*(1-r)} stroke="rgba(15,23,42,0.09)" strokeWidth="1"/>
+          <text x={PL-4} y={PT+H*(1-r)+4} textAnchor="end" fontSize="10" fill="#64748b">{Math.round(min+(max-min)*r)}</text>
+        </g>))}
+        <polyline points={pts} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" opacity="0.9"/>
+        {data.map((v,i)=>(
+          <circle key={i} cx={px(i)} cy={py(v)} r="5" fill={color} stroke="rgba(255,255,255,0.95)" strokeWidth="2" style={{ cursor: reasons ? "pointer":"default" }}>
+            {reasons && <title>{labels[i]}: {v} — {reasons[i]}</title>}
+          </circle>
+        ))}
+        {labels.map((l,i)=><text key={i} x={px(i)} y={PT+H+18} textAnchor="middle" fontSize="10" fill="#64748b">{l}</text>)}
+      </svg>
+    </div>
+  );
+}
+
+function KPIRow({ kpis }) {
+  return (
+    <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:20 }}>
+      {kpis.map((k,i)=>(
+        <div key={i} style={{ background:"rgba(15,23,42,0.045)", border:"1px solid rgba(15,23,42,0.1)", borderRadius:12, padding:"14px 16px" }}>
+          <div style={{ fontSize:11, color:"#475569", marginBottom:6 }}>{k.label}</div>
+          <div style={{ fontSize:20, fontWeight:700, color:k.color, marginBottom:4 }}>{k.value}</div>
+          <div style={{ fontSize:11, color:"#64748b" }}>{k.delta}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// 5단계 색상
+const OUTLOOK_COLOR = { "매우긍정":"#16a34a", "긍정":"#22c55e", "중립":"#f59e0b", "주의":"#f97316", "부정":"#e34948" };
+
+function CountryOutlookRow({ tabId }) {
+  const rows = COUNTRY_OUTLOOK[tabId];
+  if (!rows) return null;
+  return (
+    <div style={{ marginBottom:20 }}>
+      <div style={{ fontSize:13, fontWeight:700, color:"#94a3b8", marginBottom:10 }}>🌍 국가별 전망 및 투자 참고</div>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:8 }}>
+        {rows.map((c,i)=>(
+          <div key={i} style={{ background:"rgba(15,23,42,0.045)", border:`1px solid ${OUTLOOK_COLOR[c.outlook]}33`, borderRadius:10, padding:"10px 12px" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:6 }}>
+              <span style={{ fontSize:14 }}>{c.flag}</span>
+              <span style={{ fontSize:12, fontWeight:700, color:"#0f172a" }}>{c.name}</span>
+              <span style={{ marginLeft:"auto", fontSize:9, padding:"2px 6px", borderRadius:8, background:OUTLOOK_COLOR[c.outlook]+"22", color:OUTLOOK_COLOR[c.outlook], fontWeight:700, whiteSpace:"nowrap" }}>{c.outlook}</span>
+            </div>
+            <div style={{ fontSize:11, color:"#64748b", lineHeight:1.5, marginBottom:6 }}>{c.note}</div>
+            <div style={{ fontSize:10, color:"#0284c7", lineHeight:1.5, borderTop:"1px solid rgba(15,23,42,0.09)", paddingTop:6 }}>💡 {c.invest}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Disclaimer() {
+  return (
+    <div style={{ fontSize:10.5, color:"#64748b", marginBottom:16, display:"flex", alignItems:"center", gap:6 }}>
+      <span>⚠️</span><span>AI 생성 정보로 오류 가능성이 있습니다. 참고용으로만 활용하세요.</span>
+    </div>
+  );
+}
+
+function highlightGlossary(str, onTermClick) {
+  let parts = [str];
+  GLOSSARY_KEYS.forEach(term => {
+    const next = [];
+    parts.forEach(part => {
+      if (typeof part !== "string") { next.push(part); return; }
+      const idx = part.indexOf(term);
+      if (idx === -1) { next.push(part); return; }
+      next.push(part.slice(0,idx));
+      next.push(
+        <span key={term+idx+Math.random()} onClick={()=>onTermClick(term)}
+          style={{ color:"#b45309", borderBottom:"1px dotted #b45309", cursor:"pointer", fontWeight:600 }}>{term}</span>
+      );
+      next.push(part.slice(idx+term.length));
+    });
+    parts = next;
+  });
+  return parts;
+}
+
+function MarkdownText({ text, onTermClick }) {
+  return (
+    <div style={{ lineHeight:1.85, fontSize:14 }}>
+      {text.split("\n").map((line,i) => {
+        if (line.startsWith("## ")) return <h3 key={i} style={{ color:"#0284c7", fontSize:14, marginTop:18, marginBottom:8, fontWeight:700, borderLeft:"3px solid #0284c7", paddingLeft:10 }}>{line.slice(3)}</h3>;
+        if (line.startsWith("# "))  return <h2 key={i} style={{ color:"#0f172a", fontSize:17, marginTop:22, marginBottom:8, fontWeight:800 }}>{line.slice(2)}</h2>;
+        if (line.startsWith("- ")||line.startsWith("• ")) {
+          const parts = line.slice(2).split(/\*\*(.*?)\*\*/g);
+          return (
+            <div key={i} style={{ display:"flex", gap:10, margin:"5px 0", paddingLeft:8 }}>
+              <span style={{ color:"#0284c7", flexShrink:0, marginTop:3 }}>▸</span>
+              <span style={{ color:"#64748b" }}>{parts.map((p,j)=>j%2===1
+                ? <strong key={j} style={{ color:"#0f172a" }}>{onTermClick?highlightGlossary(p,onTermClick):p}</strong>
+                : (onTermClick?highlightGlossary(p,onTermClick):p))}</span>
+            </div>
+          );
+        }
+        if (line.trim()==="") return <div key={i} style={{ height:7 }}/>;
+        const parts = line.split(/\*\*(.*?)\*\*/g);
+        return <p key={i} style={{ color:"#64748b", margin:"3px 0" }}>{parts.map((p,j)=>j%2===1
+          ? <strong key={j} style={{ color:"#0f172a" }}>{onTermClick?highlightGlossary(p,onTermClick):p}</strong>
+          : (onTermClick?highlightGlossary(p,onTermClick):p))}</p>;
+      })}
+    </div>
+  );
+}
+
+function TabContent({ tabId, onNavigate }) {
+  const d = TAB_DATA[tabId];
+  if (!d) return null;
+  return (
+    <div>
+      <Disclaimer/>
+      <KPIRow kpis={d.kpis}/>
+      {d.pie && <PieChartSVG {...d.pie}/>}
+      {d.barChart && <BarChartSVG {...d.barChart}/>}
+      {d.lineChart && <LineChartSVG {...d.lineChart}/>}
+      <div style={{ height:1, background:"rgba(15,23,42,0.09)", margin:"18px 0" }}/>
+      <MarkdownText text={d.text} onTermClick={(t)=>onNavigate("glossary",t)}/>
+      <div style={{ height:1, background:"rgba(15,23,42,0.09)", margin:"20px 0" }}/>
+      <CountryOutlookRow tabId={tabId}/>
+    </div>
+  );
+}
+
+function ProcessImage({ photo, shape }) {
+  const [failed, setFailed] = useState(false);
+  if (failed || !photo) return <div style={{ borderRadius:12, overflow:"hidden" }}><ProcessIllustration shape={shape}/></div>;
+  return (
+    <div style={{ borderRadius:12, overflow:"hidden", background:"#0a1526" }}>
+      <img src={photo} alt="" onError={()=>setFailed(true)} style={{ width:"100%", height:220, objectFit:"cover", display:"block" }}/>
+    </div>
+  );
+}
+
+function ProcessTab() {
+  const [activeStep, setActiveStep] = useState(0);
+  const s = PROCESS_STEPS[activeStep];
+  return (
+    <div style={{ display:"flex", gap:20, maxWidth:1100 }}>
+      <div style={{ width:185, flexShrink:0 }}>
+        {PROCESS_STEPS.map((ps,i)=>(
+          <button key={i} onClick={()=>setActiveStep(i)} style={{ width:"100%", textAlign:"left", padding:"8px 10px", marginBottom:3, background:activeStep===i?"rgba(0,212,255,0.15)":"rgba(15,23,42,0.035)", border:activeStep===i?"1px solid rgba(0,212,255,0.3)":"1px solid rgba(15,23,42,0.07)", borderRadius:8, color:activeStep===i?"#0284c7":"#64748b", cursor:"pointer", fontSize:12, fontWeight:activeStep===i?700:400, display:"flex", alignItems:"center", gap:8 }}>
+            <span style={{ width:20, height:20, borderRadius:"50%", background:activeStep===i?"#0284c7":"rgba(15,23,42,0.12)", color:activeStep===i?"#000":"#64748b", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, flexShrink:0 }}>{ps.step}</span>
+            {ps.title}
+          </button>
+        ))}
+      </div>
+      <div style={{ flex:1, background:"rgba(15,23,42,0.035)", border:"1px solid rgba(15,23,42,0.09)", borderRadius:16, padding:"28px 32px" }}>
+        <Disclaimer/>
+        <div style={{ fontSize:11, color:"#475569", marginBottom:4, fontWeight:600, textTransform:"uppercase" }}>STEP {s.step}</div>
+        <h2 style={{ margin:"0 0 2px", fontSize:20, fontWeight:800, color:"#0f172a" }}>{s.title}</h2>
+        <div style={{ fontSize:13, color:"#0284c7", marginBottom:16 }}>{s.subtitle}</div>
+
+        <ProcessImage photo={s.photo} shape={s.shape} key={s.step}/>
+
+        <div style={{ display:"flex", gap:10, marginTop:10, marginBottom:20, flexWrap:"wrap" }}>
+          {s.captions.map((c,ci)=>(
+            <div key={ci} style={{ display:"flex", alignItems:"center", gap:6, background:"rgba(0,212,255,0.06)", border:"1px solid rgba(0,212,255,0.2)", borderRadius:8, padding:"6px 10px", fontSize:11, color:"#0369a1" }}>
+              <span style={{ width:6, height:6, borderRadius:"50%", background:"#0284c7", flexShrink:0 }}/>
+              {c}
+            </div>
+          ))}
+        </div>
+
+        <div style={{ height:1, background:"rgba(15,23,42,0.09)", marginBottom:16 }}/>
+        {s.points.map((p,i)=>(
+          <div key={i} style={{ display:"flex", gap:10, margin:"7px 0" }}>
+            <span style={{ color:"#0284c7", flexShrink:0, marginTop:3 }}>▸</span>
+            <span style={{ color:"#64748b", fontSize:13, lineHeight:1.7 }}>{p}</span>
+          </div>
+        ))}
+        <div style={{ display:"flex", justifyContent:"space-between", marginTop:24 }}>
+          <button onClick={()=>setActiveStep(p=>Math.max(0,p-1))} disabled={activeStep===0} style={{ padding:"8px 18px", background:"rgba(15,23,42,0.07)", border:"1px solid rgba(15,23,42,0.14)", borderRadius:8, color:activeStep===0?"#94a3b8":"#64748b", cursor:activeStep===0?"default":"pointer", fontSize:13 }}>← 이전</button>
+          <span style={{ fontSize:12, color:"#64748b", alignSelf:"center" }}>{activeStep+1} / {PROCESS_STEPS.length}</span>
+          <button onClick={()=>setActiveStep(p=>Math.min(PROCESS_STEPS.length-1,p+1))} disabled={activeStep===PROCESS_STEPS.length-1} style={{ padding:"8px 18px", background:"rgba(0,212,255,0.08)", border:"1px solid rgba(0,212,255,0.2)", borderRadius:8, color:activeStep===PROCESS_STEPS.length-1?"#94a3b8":"#0284c7", cursor:activeStep===PROCESS_STEPS.length-1?"default":"pointer", fontSize:13 }}>다음 →</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GlossaryTab({ highlightTerm }) {
+  return (
+    <div style={{ maxWidth:800 }}>
+      <Disclaimer/>
+      {Object.entries(GLOSSARY).map(([term,info])=>(
+        <div key={term} id={`term-${term}`} style={{ background: highlightTerm===term ? "rgba(0,212,255,0.1)" : "rgba(15,23,42,0.035)", border: highlightTerm===term ? "1px solid rgba(0,212,255,0.4)" : "1px solid rgba(15,23,42,0.09)", borderRadius:10, padding:"14px 18px", marginBottom:10 }}>
+          <div style={{ display:"flex", alignItems:"baseline", gap:8, marginBottom:4, flexWrap:"wrap" }}>
+            <span style={{ fontSize:15, fontWeight:800, color:"#0284c7" }}>{term}</span>
+            <span style={{ fontSize:11, color:"#475569" }}>{info.full}</span>
+          </div>
+          <div style={{ fontSize:13, color:"#64748b", lineHeight:1.7 }}>{info.def}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function LoadingDots() {
+  return (
+    <div style={{ display:"flex", gap:6, alignItems:"center", padding:"40px 0", justifyContent:"center" }}>
+      {[0,1,2].map(i=><div key={i} style={{ width:10, height:10, borderRadius:"50%", background:"#0284c7", animation:`pulse 1.2s ease-in-out ${i*0.2}s infinite` }}/>)}
+      <style>{`@keyframes pulse{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}`}</style>
+    </div>
+  );
+}
+
+function routeSearch(query) {
+  const q = query.toLowerCase();
+  for (const { keywords, tab } of SEARCH_ROUTE_MAP) {
+    if (keywords.some(k => q.includes(k.toLowerCase()))) return tab;
+  }
+  return null;
+}
+
+const GROUPS = ["기본","심화 분석","공정·용어"];
+
+function SemiconductorDashboard() {
+  const [activeTab, setActiveTab]         = useState("search");
+  const [glossaryTerm, setGlossaryTerm]   = useState(null);
+  const [liveContent, setLiveContent]     = useState({});
+  const [showLive, setShowLive]           = useState({});
+  const [loading, setLoading]             = useState({});
+  const [error, setError]                 = useState({});
+  const [lastUpdated, setLastUpdated]     = useState({});
+  const [searchQuery, setSearchQuery]     = useState("");
+  const [searchResult, setSearchResult]   = useState("");
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchHistory, setSearchHistory] = useState([]);
+  const [routeSuggestion, setRouteSuggestion] = useState(null);
+
+  function navigate(tabId, term) {
+    setActiveTab(tabId);
+    if (term) setGlossaryTerm(term);
+  }
+
+  async function fetchLive(tabId) {
+    if (!TAB_PROMPTS[tabId]) return;
+    setLoading(p=>({...p,[tabId]:true}));
+    setError(p=>({...p,[tabId]:null}));
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:1000, system:SYSTEM_PROMPT,
+          tools:[{type:"web_search_20250305",name:"web_search"}], messages:[{role:"user",content:TAB_PROMPTS[tabId]}] }),
+      });
+      const data = await res.json();
+      const text = data.content?.filter(b=>b.type==="text").map(b=>b.text).join("\n") || "데이터를 불러오지 못했습니다.";
+      setLiveContent(p=>({...p,[tabId]:text}));
+      setShowLive(p=>({...p,[tabId]:true}));
+      setLastUpdated(p=>({...p,[tabId]:Date.now()}));
+    } catch { setError(p=>({...p,[tabId]:"실시간 업데이트는 claude.ai 안에서 이 화면을 볼 때만 동작합니다. 다운로드해 독립 웹사이트로 열면 API 인증이 없어 요청이 차단됩니다."})); }
+    finally { setLoading(p=>({...p,[tabId]:false})); }
+  }
+
+  function revertLive(tabId) {
+    setShowLive(p=>({...p,[tabId]:false}));
+  }
+
+  function clearLive(tabId) {
+    setLiveContent(p=>{ const n={...p}; delete n[tabId]; return n; });
+    setShowLive(p=>({...p,[tabId]:false}));
+  }
+
+  function isQuestion(q) {
+    return /[?？]/.test(q) || /누구|누가|어떻게|왜|얼마나|언제|어디|무엇|뭐|알려줘|해줘|가능한가|되나요|인가요/.test(q);
+  }
+
+  async function doSearch(query) {
+    if (!query.trim()) return;
+    setRouteSuggestion(routeSearch(query));
+    setSearchLoading(true); setSearchResult("");
+    const prompt = isQuestion(query)
+      ? `다음 질문에 반도체·전자산업 전문가로서 최대한 구체적이고 직접적으로 답변해줘. 필요하면 관련 기업명·수치·배경도 함께 설명해줘.\n\n질문: "${query}"`
+      : `"${query}"에 대한 반도체 산업 정보를 종합 분석해줘. 1)개요 2)관련 국가(한·미·중·일·대만) 동향 3)최신 기술·시장·정책 4)핵심 기업 및 수치 5)향후 전망`;
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:1000, system:SYSTEM_PROMPT,
+          tools:[{type:"web_search_20250305",name:"web_search"}], messages:[{role:"user",content:prompt}] }),
+      });
+      const data = await res.json();
+      const text = data.content?.filter(b=>b.type==="text").map(b=>b.text).join("\n") || "결과를 불러오지 못했습니다.";
+      setSearchResult(text);
+      setSearchHistory(p=>[{query},...p.slice(0,4)]);
+    } catch { setSearchResult("⚠️ 실시간 AI 검색은 claude.ai 안에서 볼 때만 동작합니다. 다운로드한 독립 웹사이트에서는 API 인증이 없어 요청이 차단됩니다. 사이드바의 정리된 탭 내용은 정상적으로 이용 가능합니다."); }
+    finally { setSearchLoading(false); }
+  }
+
+  const tab = TABS.find(t=>t.id===activeTab);
+  const isLiveShown = !!(liveContent[activeTab] && showLive[activeTab]);
+  const hasLive = !!liveContent[activeTab];
+  const timeAgo = (ts) => { if(!ts)return""; const m=Math.floor((Date.now()-ts)/60000); return m<1?"방금 전":`${m}분 전`; };
+
+  return (
+    <div style={{ display:"flex", minHeight:"100vh", background:"linear-gradient(160deg,#f8fafc 0%,#eef2f7 55%,#e9edf3 100%)", fontFamily:"'Segoe UI',system-ui,sans-serif", color:"#0f172a" }}>
+      <aside style={{ width:230, flexShrink:0, background:"rgba(255,255,255,0.85)", borderRight:"1px solid rgba(0,212,255,0.1)", display:"flex", flexDirection:"column", backdropFilter:"blur(12px)", position:"sticky", top:0, height:"100vh", overflowY:"auto" }}>
+        <div style={{ padding:"22px 18px 14px" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8 }}>
+            <div style={{ width:34, height:34, borderRadius:8, background:"linear-gradient(135deg,#0284c7,#0055ff)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>⚡</div>
+            <div><div style={{ fontSize:14, fontWeight:800 }}>반도체</div><div style={{ fontSize:10, color:"#0284c7", fontWeight:600 }}>INTELLIGENCE</div></div>
+          </div>
+          <div style={{ fontSize:10, color:"#22c55e", background:"rgba(34,197,94,0.08)", border:"1px solid rgba(34,197,94,0.25)", padding:"3px 8px", borderRadius:12, display:"inline-block" }}>✅ 즉시 사용 가능</div>
+        </div>
+        <div style={{ padding:"0 10px 12px" }}>
+          <button onClick={()=>navigate("search")} style={{ width:"100%", textAlign:"left", padding:"11px 14px", background: activeTab==="search"?"rgba(0,212,255,0.18)":"rgba(0,212,255,0.06)", border:"1px solid rgba(0,212,255,0.3)", borderRadius:10, color:"#0284c7", cursor:"pointer", fontSize:14, fontWeight:700, display:"flex", alignItems:"center", gap:8 }}>
+            🔍 통합 검색 <span style={{ marginLeft:"auto", fontSize:10, color:"#475569" }}>홈</span>
+          </button>
+        </div>
+        <div style={{ height:1, background:"rgba(15,23,42,0.07)", margin:"0 14px" }}/>
+        {GROUPS.map(group=>(
+          <div key={group} style={{ padding:"12px 10px 4px" }}>
+            <div style={{ fontSize:9, fontWeight:700, color:"#64748b", letterSpacing:"0.1em", textTransform:"uppercase", paddingLeft:8, marginBottom:5 }}>{group}</div>
+            {TABS.filter(t=>t.group===group).map(t=>(
+              <button key={t.id} onClick={()=>navigate(t.id)} style={{ width:"100%", textAlign:"left", padding:"9px 12px", background:activeTab===t.id?"rgba(0,212,255,0.12)":"transparent", border:activeTab===t.id?"1px solid rgba(0,212,255,0.25)":"1px solid transparent", borderRadius:8, color:activeTab===t.id?"#0284c7":"#64748b", cursor:"pointer", fontSize:13, fontWeight:activeTab===t.id?600:400, display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:2 }}>
+                <span>{t.icon} {t.label}</span>
+                <span>{loading[t.id]&&<span style={{ fontSize:8, color:"#f59e0b" }}>●</span>}{liveContent[t.id]&&!loading[t.id]&&<span style={{ fontSize:8, color:"#0284c7" }}>🔴</span>}</span>
+              </button>
+            ))}
+          </div>
+        ))}
+        <div style={{ marginTop:"auto", padding:"14px", borderTop:"1px solid rgba(15,23,42,0.07)" }}>
+          <div style={{ fontSize:9, color:"#64748b", marginBottom:6, fontWeight:600 }}>분석 대상국</div>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:4 }}>
+            {["🇰🇷 KR","🇺🇸 US","🇨🇳 CN","🇯🇵 JP","🇹🇼 TW"].map(c=>(<span key={c} style={{ fontSize:10, background:"rgba(15,23,42,0.07)", border:"1px solid rgba(15,23,42,0.12)", borderRadius:4, padding:"2px 6px", color:"#64748b" }}>{c}</span>))}
+          </div>
+        </div>
+      </aside>
+
+      <main style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+        <div style={{ padding:"14px 32px", borderBottom:"1px solid rgba(15,23,42,0.07)", background:"rgba(255,255,255,0.6)", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <div>
+            <h2 style={{ margin:0, fontSize:20, fontWeight:800 }}>{tab.icon} {tab.label}</h2>
+            <p style={{ margin:"3px 0 0", fontSize:12, color:"#475569" }}>
+              {activeTab==="process"?"단계별 공정 상세 · 사진(실패 시 일러스트) + 캡션":
+               activeTab==="search"?"키워드·국가·기술·질문 무엇이든 검색 · 시작 화면":
+               activeTab==="glossary"?"전문용어 클릭 시 여기로 이동":
+               isLiveShown?`🔴 실시간 업데이트 텍스트 표시 중 · ${timeAgo(lastUpdated[activeTab])}`:"📋 사전 정리 데이터 · KPI·차트·국가전망 포함"}
+            </p>
+          </div>
+          {activeTab!=="process"&&activeTab!=="search"&&activeTab!=="glossary"&&(
+            <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+              {hasLive && isLiveShown && (
+                <button onClick={()=>revertLive(activeTab)} style={{ padding:"7px 14px", background:"rgba(15,23,42,0.07)", border:"1px solid rgba(15,23,42,0.2)", borderRadius:8, color:"#64748b", fontSize:12, cursor:"pointer" }}>↩ 기본 데이터로</button>
+              )}
+              {hasLive && !isLiveShown && (
+                <button onClick={()=>setShowLive(p=>({...p,[activeTab]:true}))} style={{ padding:"7px 14px", background:"rgba(0,212,255,0.08)", border:"1px solid rgba(0,212,255,0.2)", borderRadius:8, color:"#0284c7", fontSize:12, cursor:"pointer" }}>🔴 실시간 결과 다시 보기</button>
+              )}
+              <button onClick={()=>fetchLive(activeTab)} disabled={loading[activeTab]} style={{ padding:"7px 16px", background:"linear-gradient(135deg,rgba(0,212,255,0.15),rgba(0,85,255,0.15))", border:"1px solid rgba(0,212,255,0.3)", borderRadius:8, color:"#0284c7", fontSize:12, cursor:loading[activeTab]?"not-allowed":"pointer", fontWeight:600, opacity:loading[activeTab]?0.6:1 }}>
+                {loading[activeTab]?"⏳ 업데이트 중...":"🔄 실시간 새로고침"}
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div style={{ flex:1, overflowY:"auto", padding:"24px 32px" }}>
+          {activeTab==="process"&&<ProcessTab/>}
+          {activeTab==="glossary"&&<GlossaryTab highlightTerm={glossaryTerm}/>}
+
+          {activeTab==="search"&&(
+            <div style={{ maxWidth:960 }}>
+              <Disclaimer/>
+              <div style={{ background:"rgba(15,23,42,0.05)", border:"1px solid rgba(0,212,255,0.15)", borderRadius:16, padding:"26px 30px", marginBottom:16 }}>
+                <div style={{ fontSize:14, color:"#64748b", marginBottom:12, fontWeight:600 }}>🔍 국가·기술·기업·소재·정책·HS코드 검색, 또는 질문을 그대로 입력하세요</div>
+                <div style={{ fontSize:12, color:"#64748b", marginBottom:12 }}>예: "갤럭시 부품은 누가 공급하나요?", "삼성 3nm 수율은 어느 정도인가요?"</div>
+                <div style={{ display:"flex", gap:10 }}>
+                  <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doSearch(searchQuery)}
+                    placeholder="키워드 또는 질문을 입력하세요..."
+                    style={{ flex:1, padding:"13px 16px", background:"rgba(255,255,255,0.9)", border:"1px solid rgba(0,212,255,0.25)", borderRadius:10, color:"#0f172a", fontSize:15, outline:"none" }}/>
+                  <button onClick={()=>doSearch(searchQuery)} disabled={searchLoading} style={{ padding:"13px 26px", background:"linear-gradient(135deg,#0284c7,#0055ff)", border:"none", borderRadius:10, color:"#fff", fontWeight:700, fontSize:14, cursor:"pointer", opacity:searchLoading?0.6:1 }}>
+                    {searchLoading?"분석 중...":"검색"}
+                  </button>
+                </div>
+                <div style={{ display:"flex", gap:6, marginTop:14, flexWrap:"wrap" }}>
+                  {["한국","일본","중국","대만","미국","HBM","SiC","GaN","CHIPS법","EUV","공급망","불화수소","GAA","8542","수출통제","파운드리"].map(c=>(
+                    <button key={c} onClick={()=>{setSearchQuery(c);doSearch(c);}} style={{ padding:"5px 12px", background:"rgba(15,23,42,0.09)", border:"1px solid rgba(15,23,42,0.16)", borderRadius:20, color:"#64748b", fontSize:11, cursor:"pointer" }}>{c}</button>
+                  ))}
+                </div>
+              </div>
+
+              {routeSuggestion&&searchResult&&(
+                <div style={{ background:"rgba(99,102,241,0.1)", border:"1px solid rgba(99,102,241,0.25)", borderRadius:10, padding:"12px 18px", marginBottom:16, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                  <span style={{ fontSize:13, color:"#3730a3" }}>💡 <strong>"{searchQuery}"</strong>은 <strong>{TABS.find(t=>t.id===routeSuggestion)?.label}</strong> 탭에서 차트·국가별 전망과 함께 더 자세히 볼 수 있어요</span>
+                  <button onClick={()=>navigate(routeSuggestion)} style={{ padding:"6px 14px", background:"rgba(99,102,241,0.2)", border:"1px solid rgba(99,102,241,0.4)", borderRadius:8, color:"#4f46e5", fontSize:12, cursor:"pointer", fontWeight:600, whiteSpace:"nowrap" }}>탭으로 이동 →</button>
+                </div>
+              )}
+
+              {searchHistory.length>0&&(
+                <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap", alignItems:"center" }}>
+                  <span style={{ fontSize:11, color:"#64748b" }}>최근:</span>
+                  {searchHistory.map((h,i)=>(<button key={i} onClick={()=>{setSearchQuery(h.query);doSearch(h.query);}} style={{ padding:"3px 10px", background:"rgba(99,102,241,0.1)", border:"1px solid rgba(99,102,241,0.2)", borderRadius:12, color:"#4338ca", fontSize:11, cursor:"pointer" }}>{h.query}</button>))}
+                </div>
+              )}
+
+              <div style={{ background:"rgba(15,23,42,0.05)", border:"1px solid rgba(15,23,42,0.14)", borderRadius:16, padding:"30px 34px", minHeight:300 }}>
+                {searchLoading&&(<div style={{ display:"flex", flexDirection:"column", alignItems:"center", padding:"60px 0" }}><LoadingDots/><p style={{ color:"#475569", fontSize:13, marginTop:14 }}>"{searchQuery}" 분석 중...</p></div>)}
+                {!searchLoading&&!searchResult&&(<div style={{ textAlign:"center", padding:"80px 0", color:"#64748b" }}><div style={{ fontSize:56, marginBottom:16 }}>🔍</div><p style={{ fontSize:15 }}>키워드나 질문을 검색하면 AI가 분석하고<br/>관련 탭으로 안내해 드립니다</p></div>)}
+                {searchResult&&!searchLoading&&<MarkdownText text={searchResult} onTermClick={(t)=>navigate("glossary",t)}/>}
+              </div>
+            </div>
+          )}
+
+          {activeTab!=="search"&&activeTab!=="process"&&activeTab!=="glossary"&&(
+            <div style={{ background:"rgba(15,23,42,0.035)", border:"1px solid rgba(15,23,42,0.09)", borderRadius:16, padding:"28px 32px", minHeight:400, maxWidth:1040 }}>
+              {loading[activeTab]&&(<div style={{ display:"flex", flexDirection:"column", alignItems:"center", padding:"60px 0" }}><LoadingDots/><p style={{ color:"#475569", fontSize:13, marginTop:14 }}>AI가 웹을 검색하고 최신 정보를 가져오는 중...</p></div>)}
+              {error[activeTab]&&(
+                <div style={{ padding:14, background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.2)", borderRadius:10, color:"#b91c1c", display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+                  <span>⚠️ {error[activeTab]}</span>
+                  <button onClick={()=>fetchLive(activeTab)} style={{ padding:"6px 12px", background:"rgba(239,68,68,0.15)", border:"1px solid rgba(239,68,68,0.3)", borderRadius:6, color:"#b91c1c", fontSize:12, cursor:"pointer" }}>재시도</button>
+                </div>
+              )}
+              {!loading[activeTab]&&(
+                <div>
+                  <TabContent tabId={activeTab} onNavigate={navigate}/>
+                  {isLiveShown && (
+                    <div style={{ marginTop:24, borderTop:"2px solid rgba(0,212,255,0.2)", paddingTop:20 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
+                        <span style={{ fontSize:12, fontWeight:700, color:"#0284c7" }}>🔴 실시간 업데이트 결과</span>
+                        <span style={{ fontSize:10, color:"#64748b" }}>{timeAgo(lastUpdated[activeTab])}</span>
+                        <button onClick={()=>clearLive(activeTab)} style={{ marginLeft:"auto", fontSize:10, color:"#64748b", background:"transparent", border:"1px solid rgba(15,23,42,0.14)", borderRadius:6, padding:"3px 8px", cursor:"pointer" }}>✕ 삭제</button>
+                      </div>
+                      <MarkdownText text={liveContent[activeTab]} onTermClick={(t)=>navigate("glossary",t)}/>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          <p style={{ textAlign:"center", color:"#94a3b8", fontSize:11, marginTop:20 }}>
+            💡 향후 기업별 미래 예측 기능 추가 예정 · 🔄 버튼으로 실시간 업데이트 · 기본 데이터: 2024~2025
+          </p>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<SemiconductorDashboard />);
+</script>
+</body>
+</html>
