@@ -408,49 +408,41 @@ const TAB_DATA = {
 // 공정 단계: 실제 사진(있으면 표시) + 실패 시 SVG 일러스트로 대체, 설명은 이미지 아래 캡션으로 배치(겹침 방지)
 const PROCESS_STEPS = [
   { step:1, title:"웨이퍼 제조", subtitle:"Wafer Fabrication", shape:"ingot",
-    photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Silicon_Ingot.jpg/400px-Silicon_Ingot.jpg",
+    photo:"images/step1-ingot.jpg", attribution:"삼성반도체이야기",
     captions:["단결정 실리콘 잉곳 — 1,414°C에서 성장","300mm 웨이퍼로 슬라이싱 후 폴리싱"],
     points:["고순도 실리콘(9N급) — SiO₂ 모래에서 추출","초크랄스키법(CZ법)으로 단결정 잉곳 성장","다이아몬드 와이어쏘로 두께 ~775μm 절단","CMP로 표면 평탄화, 거칠기 0.1nm 이하"] },
-  { step:2, title:"산화", subtitle:"Oxidation", shape:"furnace",
-    photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Diffusion_Furnace.jpg/400px-Diffusion_Furnace.jpg",
+  { step:2, title:"산화 공정", subtitle:"Oxidation", shape:"furnace",
+    photo:"images/step2-oxidation.jpg", attribution:"삼성반도체이야기",
     captions:["고온 퍼니스 900~1200°C 가열","SiO₂ 절연막 1~10nm 형성"],
     points:["열산화: 고온에서 SiO₂ 절연막 형성","건식 산화: 얇고 고품질 (게이트 산화막)","습식 산화: 두꺼운 산화막 빠르게 형성"] },
-  { step:3, title:"포토리소그래피", subtitle:"Photolithography", shape:"euv",
-    photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/ASML_NXE3400B.jpg/400px-ASML_NXE3400B.jpg",
-    captions:["ASML EUV 노광장비 — 대당 약 4,000억원","13.5nm 파장으로 회로 패턴 전사"],
+  { step:3, title:"포토(노광) 공정", subtitle:"Photolithography", shape:"euv",
+    photo:"images/step3-exposure.jpg", attribution:"삼성반도체이야기",
+    extraPhotos:[
+      { src:"images/step3-photoresist.jpg", label:"감광액 도포", attribution:"삼성반도체이야기" },
+      { src:"images/step3-develop.jpg", label:"현상 공정", attribution:"삼성반도체이야기" },
+    ],
+    captions:["마스크·렌즈를 통해 빛으로 웨이퍼에 회로를 그려넣는 노광","감광액(포토레지스트)이 빛에 반응해 회로 패턴 형성"],
     points:["포토레지스트 스핀코팅 (수십~수백 nm)","EUV(13.5nm) 또는 ArF(193nm) 광원으로 노광","OPC 적용, CD-SEM으로 선폭 측정"] },
-  { step:4, title:"식각", subtitle:"Etching", shape:"plasma",
-    photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Plasma_etching_reactor.jpg/400px-Plasma_etching_reactor.jpg",
-    captions:["플라즈마 반응기 (RIE / ICP-RIE)","CF₄·Cl₂·HBr 가스로 수직 식각"],
+  { step:4, title:"식각 공정", subtitle:"Etching", shape:"plasma",
+    photo:"images/step4-etching.jpg", attribution:"삼성반도체이야기",
+    captions:["전자·이온의 충돌·가속으로 플라즈마 생성","연쇄반응(Avalanche)으로 식각용 플라즈마 형성"],
     points:["건식 식각: 플라즈마 이용, 수직 프로파일","습식 식각: HF·KOH 용액, 등방성","원자층 식각(ALE): 3nm 이하 공정 필수"] },
-  { step:5, title:"이온 주입", subtitle:"Ion Implantation", shape:"implant",
-    photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Ion_implanter_schematic.svg/400px-Ion_implanter_schematic.svg.png",
-    captions:["이온 빔 가속기 1keV~수MeV","N형·P형 도펀트 주입"],
-    points:["N형(인,비소)/P형(붕소) 도펀트 주입","에너지로 주입 깊이 제어","어닐링(RTA): 결정 손상 복구"] },
-  { step:6, title:"박막 증착", subtitle:"Thin Film Deposition", shape:"cvd",
-    photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Cvd_reactor.png/400px-Cvd_reactor.png",
-    captions:["CVD 반응로 (화학기상증착)","ALD로 원자층씩 정밀 증착"],
-    points:["CVD: LPCVD·PECVD·MOCVD","ALD: High-k 절연막(HfO₂)","PVD(스퍼터링): 금속 배선 Cu"] },
-  { step:7, title:"CMP", subtitle:"Chemical Mechanical Planarization", shape:"cmp",
-    photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/CMP_schematic.svg/400px-CMP_schematic.svg.png",
-    captions:["폴리우레탄 패드로 슬러리 연마","단차 평탄화, 7nm 이하는 20회+ 반복"],
-    points:["다층 배선 형성 시 단차 평탄화","슬러리: SiO₂·CeO₂ 연마 입자","7nm 이하 공정: 20회 이상 반복"] },
-  { step:8, title:"금속 배선", subtitle:"Metallization", shape:"metal",
-    photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Copper_interconnect.jpg/400px-Copper_interconnect.jpg",
-    captions:["Cu 다층 배선 15~20층 (로직칩)","다마신 공정, TaN/Ta 배리어메탈"],
-    points:["다마신 공정: 홈 파고 Cu 매립 후 CMP","배리어 메탈: TaN/Ta — Cu 확산 방지","로직칩 15~20층, DRAM 5~10층"] },
-  { step:9, title:"전공정 검사", subtitle:"In-line Inspection", shape:"sem",
-    photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Scanning_Electron_Microscope_%28SEM%29.jpg/400px-Scanning_Electron_Microscope_%28SEM%29.jpg",
-    captions:["CD-SEM 장비로 임계치수 측정","AI 결함 분류, APC 수율 관리"],
-    points:["CD-SEM: 임계치수 측정","전기적 테스트: 누설전류·저항 측정","AI 기반 결함 분류, APC 수율 관리"] },
-  { step:10, title:"패키징", subtitle:"Packaging", shape:"hbm",
+  { step:5, title:"증착 & 이온주입 공정", subtitle:"Deposition & Ion Implantation", shape:"implant",
+    photo:"images/step5-implant.jpg", attribution:"삼성반도체이야기",
+    captions:["이온주입(임플란트)으로 웨이퍼에 도펀트 영역 형성","이후 그 위에 박막(산화막) 증착"],
+    points:["이온주입: N형(인,비소)/P형(붕소) 도펀트 주입, 에너지로 깊이 제어","어닐링(RTA): 이온주입 후 결정 손상 복구","박막증착: CVD·ALD·PVD로 절연막·금속막 형성","CMP: 증착 후 단차를 화학기계적으로 평탄화"] },
+  { step:6, title:"금속 배선 공정", subtitle:"Metallization", shape:"metal",
+    photo:"images/step8-metal.jpg", attribution:"삼성반도체이야기",
+    captions:["알루미늄 배선과 베리어메탈(TaN/Ta) 구조","※ 그림은 알루미늄 배선 예시, 최첨단 공정은 구리 배선 사용"],
+    points:["다마신 공정: 홈 파고 Cu 매립 후 CMP (최첨단 공정)","배리어 메탈: TaN/Ta — 금속 확산 방지","로직칩 15~20층, DRAM 5~10층 배선"] },
+  { step:7, title:"EDS 공정", subtitle:"Electrical Die Sorting", shape:"sem",
+    photo:"images/step9-eds.jpg", attribution:"삼성반도체이야기",
+    captions:["EDS 검사 4단계: ET Test → Hot/Cold Test","→ Repair/Final Test → Inking"],
+    points:["ET Test & WBI: 개별 소자 전기 특성 테스트","Hot/Cold Test: 특정 온도에서 정상 동작 여부 판별","Repair/Final Test: 수선 가능 칩 수선 후 양/불량 최종 판단","Inking: 불량 칩을 특수 잉크로 표시"] },
+  { step:8, title:"패키징 공정", subtitle:"Packaging", shape:"hbm",
     photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/HBM2_Samsung.jpg/400px-HBM2_Samsung.jpg",
     captions:["HBM 3D 적층, TSV 관통전극","CoWoS 2.5D — HBM+로직 통합"],
-    points:["다이싱 후 다이 어태치","CoWoS: 2.5D 인터포저, HBM+로직 통합","HBM: 3D 적층, TSV 관통전극"] },
-  { step:11, title:"최종 테스트", subtitle:"Final Test", shape:"probe",
-    photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Wafer_probe.jpg/400px-Wafer_probe.jpg",
-    captions:["웨이퍼 프로브로 전기적 테스트","번인: 고온·고전압으로 조기 불량 선별"],
-    points:["번인(Burn-in): 고온·고전압 가속 테스트","ATE 자동 테스트 장비로 기능 검증","초기 수율 50~60% → 양산 85%+"] },
+    points:["다이싱 후 다이 어태치, 와이어본딩/플립칩으로 전기 연결","CoWoS: 2.5D 인터포저, HBM+로직 통합","HBM: 3D 적층, TSV 관통전극","번인(Burn-in) 테스트로 최종 신뢰성 검증 후 출하"] },
 ];
 
 function ProcessIllustration({ shape }) {
@@ -728,8 +720,8 @@ function ProcessImage({ photo, shape }) {
   const [failed, setFailed] = useState(false);
   if (failed || !photo) return <div style={{ borderRadius:3, overflow:"hidden" }}><ProcessIllustration shape={shape}/></div>;
   return (
-    <div style={{ borderRadius:3, overflow:"hidden", background:"#0a1526" }}>
-      <img src={photo} alt="" onError={()=>setFailed(true)} style={{ width:"100%", height:220, objectFit:"cover", display:"block" }}/>
+    <div style={{ borderRadius:3, overflow:"hidden", background:"#dbe3e8" }}>
+      <img src={photo} alt="" onError={()=>setFailed(true)} style={{ width:"100%", height:280, objectFit:"contain", display:"block" }}/>
     </div>
   );
 }
@@ -754,6 +746,21 @@ function ProcessTab() {
         <div style={{ fontSize:13, color:"var(--accent)", marginBottom:16 }}>{s.subtitle}</div>
 
         <ProcessImage photo={s.photo} shape={s.shape} key={s.step}/>
+        {s.attribution && <div style={{ fontSize:10, color:"var(--text-4)", marginTop:4, textAlign:"right" }}>출처: {s.attribution}</div>}
+
+        {s.extraPhotos && (
+          <div style={{ display:"flex", gap:10, marginTop:10 }}>
+            {s.extraPhotos.map((ep,epi)=>(
+              <div key={epi} style={{ flex:1 }}>
+                <div style={{ borderRadius:3, overflow:"hidden", border:"1px solid var(--border)" }}>
+                  <img src={ep.src} alt={ep.label} style={{ width:"100%", height:120, objectFit:"cover", display:"block" }}/>
+                </div>
+                <div style={{ fontSize:11, color:"var(--text-3)", marginTop:4 }}>{ep.label}</div>
+                <div style={{ fontSize:9, color:"var(--text-4)", textAlign:"right" }}>출처: {ep.attribution}</div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div style={{ display:"flex", gap:10, marginTop:10, marginBottom:20, flexWrap:"wrap" }}>
           {s.captions.map((c,ci)=>(
