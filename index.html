@@ -27,22 +27,23 @@
 <body>
 <div id="root"></div>
 <script type="text/babel" data-presets="react">
-const { useState } = React;
+const { useState, useEffect } = React;
 
 const TABS = [
-  { id:"search",      label:"통합 검색",     icon:"🔍", group:"홈" },
-  { id:"overview",    label:"시장 개요",     icon:"📊", group:"기본" },
-  { id:"trade",       label:"무역 현황",     icon:"🌐", group:"기본" },
-  { id:"tech",        label:"기술 트렌드",   icon:"🔬", group:"기본" },
-  { id:"news",        label:"최신 뉴스",     icon:"📰", group:"기본" },
-  { id:"policy",      label:"규제·정책",     icon:"⚖️", group:"기본" },
-  { id:"materials",   label:"소재 의존도",   icon:"🧪", group:"심화 분석" },
-  { id:"hscode",      label:"HS Code 분석",  icon:"📦", group:"심화 분석" },
-  { id:"supply",      label:"수급 예측",     icon:"📡", group:"심화 분석" },
-  { id:"power",       label:"전력 반도체",   icon:"⚡", group:"심화 분석" },
-  { id:"engineering", label:"전자공학 지표", icon:"🔌", group:"심화 분석" },
-  { id:"process",     label:"공정 과정",     icon:"🏭", group:"공정·용어" },
-  { id:"glossary",    label:"용어 색인",     icon:"📖", group:"공정·용어" },
+  { id:"search",      label:"통합 검색",     icon:"", group:"홈" },
+  { id:"overview",    label:"시장 개요",     icon:"", group:"기본" },
+  { id:"trade",       label:"무역 현황",     icon:"", group:"기본" },
+  { id:"tech",        label:"기술 트렌드",   icon:"", group:"기본" },
+  { id:"news",        label:"최신 뉴스",     icon:"", group:"기본" },
+  { id:"policy",      label:"규제·정책",     icon:"", group:"기본" },
+  { id:"materials",   label:"소재 의존도",   icon:"", group:"심화 분석" },
+  { id:"hscode",      label:"HS Code 분석",  icon:"", group:"심화 분석" },
+  { id:"supply",      label:"수급 예측",     icon:"", group:"심화 분석" },
+  { id:"power",       label:"전력 반도체",   icon:"", group:"심화 분석" },
+  { id:"engineering", label:"전자공학 지표", icon:"", group:"심화 분석" },
+  { id:"process",     label:"공정 과정",     icon:"", group:"공정·용어" },
+  { id:"compare",     label:"기업·국가 비교", icon:"", group:"공정·용어" },
+  { id:"glossary",    label:"용어 색인",     icon:"", group:"공정·용어" },
 ];
 
 const SEARCH_ROUTE_MAP = [
@@ -127,67 +128,67 @@ const GLOSSARY_KEYS = Object.keys(GLOSSARY).sort((a,b)=>b.length-a.length);
 // 5단계 전망: 매우긍정 · 긍정 · 중립 · 주의 · 부정
 const COUNTRY_OUTLOOK = {
   overview: [
-    { flag:"🇰🇷", name:"한국", outlook:"긍정", note:"HBM 독점적 지위, 메모리 반등 사이클 수혜", invest:"메모리·HBM 밸류체인 비중 확대 고려" },
-    { flag:"🇺🇸", name:"미국", outlook:"매우긍정", note:"AI GPU 수요 독점, NVIDIA 중심 생태계 강세", invest:"팹리스·AI 인프라 기업 우선 검토" },
-    { flag:"🇨🇳", name:"중국", outlook:"중립", note:"성숙공정 내재화 가속, 첨단공정은 규제로 제한적", invest:"규제 리스크 감안 시 성숙공정 관련주 선별 접근" },
-    { flag:"🇯🇵", name:"일본", outlook:"긍정", note:"소재·장비 강세, 라피더스 2nm 도전 지속", invest:"소재·장비주는 안정적 방어주로 매력" },
-    { flag:"🇹🇼", name:"대만", outlook:"매우긍정", note:"TSMC 파운드리 압도적 지위 유지", invest:"지정학 리스크 분산 전제 하 핵심 비중 유지" },
+    { flag:"", name:"한국", outlook:"긍정", note:"HBM 독점적 지위, 메모리 반등 사이클 수혜", invest:"메모리·HBM 밸류체인 비중 확대 고려" },
+    { flag:"", name:"미국", outlook:"매우긍정", note:"AI GPU 수요 독점, NVIDIA 중심 생태계 강세", invest:"팹리스·AI 인프라 기업 우선 검토" },
+    { flag:"", name:"중국", outlook:"중립", note:"성숙공정 내재화 가속, 첨단공정은 규제로 제한적", invest:"규제 리스크 감안 시 성숙공정 관련주 선별 접근" },
+    { flag:"", name:"일본", outlook:"긍정", note:"소재·장비 강세, 라피더스 2nm 도전 지속", invest:"소재·장비주는 안정적 방어주로 매력" },
+    { flag:"", name:"대만", outlook:"매우긍정", note:"TSMC 파운드리 압도적 지위 유지", invest:"지정학 리스크 분산 전제 하 핵심 비중 유지" },
   ],
   trade: [
-    { flag:"🇰🇷", name:"한국", outlook:"긍정", note:"대중 비중 축소, 미국·유럽向 수출 다변화 중", invest:"공급망 다변화 수혜 기업 주목" },
-    { flag:"🇺🇸", name:"미국", outlook:"긍정", note:"CHIPS법 보조금으로 자국 생산 확대", invest:"미국 내 팹 건설 관련 장비·건설주" },
-    { flag:"🇨🇳", name:"중국", outlook:"부정", note:"수입 의존 지속, 자급률 목표 미달, 규제 심화", invest:"수출 규제 영향 지속 관찰 필요, 비중 축소 검토" },
-    { flag:"🇯🇵", name:"일본", outlook:"긍정", note:"TSMC 유치로 생산 비중 확대", invest:"구마모토 인근 공급망 기업 관심" },
-    { flag:"🇹🇼", name:"대만", outlook:"중립", note:"해외 팹 분산으로 집중도 완화, 지정학 리스크 상존", invest:"지정학 헤지 차원 분산 투자 권고" },
+    { flag:"", name:"한국", outlook:"긍정", note:"대중 비중 축소, 미국·유럽 방향 수출 다변화 중", invest:"공급망 다변화 수혜 기업 주목" },
+    { flag:"", name:"미국", outlook:"긍정", note:"CHIPS법 보조금으로 자국 생산 확대", invest:"미국 내 팹 건설 관련 장비·건설주" },
+    { flag:"", name:"중국", outlook:"부정", note:"수입 의존 지속, 자급률 목표 미달, 규제 심화", invest:"수출 규제 영향 지속 관찰 필요, 비중 축소 검토" },
+    { flag:"", name:"일본", outlook:"긍정", note:"TSMC 유치로 생산 비중 확대", invest:"구마모토 인근 공급망 기업 관심" },
+    { flag:"", name:"대만", outlook:"중립", note:"해외 팹 분산으로 집중도 완화, 지정학 리스크 상존", invest:"지정학 헤지 차원 분산 투자 권고" },
   ],
   tech: [
-    { flag:"🇰🇷", name:"한국", outlook:"긍정", note:"HBM3E/4 리더십, 3nm GAA 수율 개선 중", invest:"HBM 공급망 최우선 투자처로 판단" },
-    { flag:"🇺🇸", name:"미국", outlook:"매우긍정", note:"18A 공정 개발, AI칩 설계 압도적 우위", invest:"차세대 AI 칩셋 설계기업 주목" },
-    { flag:"🇨🇳", name:"중국", outlook:"주의", note:"7nm 확인 수준, EUV 접근 불가로 첨단공정 제한적", invest:"기술 격차 지속 시 단기 고밸류 부담 유의" },
-    { flag:"🇯🇵", name:"일본", outlook:"중립", note:"라피더스 2nm 도전, 상용화까지 시간 필요", invest:"중장기 관점의 선별적 접근 권고" },
-    { flag:"🇹🇼", name:"대만", outlook:"매우긍정", note:"2nm 최선두, CoWoS 증설 지속", invest:"첨단 패키징 관련 공급사 주목" },
+    { flag:"", name:"한국", outlook:"긍정", note:"HBM3E/4 리더십, 3nm GAA 수율 개선 중", invest:"HBM 공급망 최우선 투자처로 판단" },
+    { flag:"", name:"미국", outlook:"매우긍정", note:"18A 공정 개발, AI칩 설계 압도적 우위", invest:"차세대 AI 칩셋 설계기업 주목" },
+    { flag:"", name:"중국", outlook:"주의", note:"7nm 확인 수준, EUV 접근 불가로 첨단공정 제한적", invest:"기술 격차 지속 시 단기 고밸류 부담 유의" },
+    { flag:"", name:"일본", outlook:"중립", note:"라피더스 2nm 도전, 상용화까지 시간 필요", invest:"중장기 관점의 선별적 접근 권고" },
+    { flag:"", name:"대만", outlook:"매우긍정", note:"2nm 최선두, CoWoS 증설 지속", invest:"첨단 패키징 관련 공급사 주목" },
   ],
   materials: [
-    { flag:"🇰🇷", name:"한국", outlook:"주의", note:"국산화 진행 중이나 EUV PR 등 핵심 소재 취약", invest:"국산화 성공 기업 선별 투자" },
-    { flag:"🇺🇸", name:"미국", outlook:"긍정", note:"CMP 슬러리 등 일부 소재 강세", invest:"소재 공급망 다변화 수혜주 검토" },
-    { flag:"🇨🇳", name:"중국", outlook:"긍정", note:"희토류 자원 무기화로 협상력 우위", invest:"희토류 대체 기술 개발기업 주목" },
-    { flag:"🇯🇵", name:"일본", outlook:"매우긍정", note:"불화수소·PR 등 핵심 소재 세계 최강", invest:"소재 원천기업 안정적 배당주로 매력" },
-    { flag:"🇹🇼", name:"대만", outlook:"주의", note:"소재 대부분 수입 의존, 자체 생산 기반 약함", invest:"공급 안정성 이슈 지속 모니터링 필요" },
+    { flag:"", name:"한국", outlook:"주의", note:"국산화 진행 중이나 EUV PR 등 핵심 소재 취약", invest:"국산화 성공 기업 선별 투자" },
+    { flag:"", name:"미국", outlook:"긍정", note:"CMP 슬러리 등 일부 소재 강세", invest:"소재 공급망 다변화 수혜주 검토" },
+    { flag:"", name:"중국", outlook:"긍정", note:"희토류 자원 무기화로 협상력 우위", invest:"희토류 대체 기술 개발기업 주목" },
+    { flag:"", name:"일본", outlook:"매우긍정", note:"불화수소·PR 등 핵심 소재 세계 최강", invest:"소재 원천기업 안정적 배당주로 매력" },
+    { flag:"", name:"대만", outlook:"주의", note:"소재 대부분 수입 의존, 자체 생산 기반 약함", invest:"공급 안정성 이슈 지속 모니터링 필요" },
   ],
   hscode: [
-    { flag:"🇰🇷", name:"한국", outlook:"긍정", note:"8542.32(메모리) 세계 최상위 경쟁력", invest:"메모리 관련 수출 데이터 추적 유효" },
-    { flag:"🇺🇸", name:"미국", outlook:"매우긍정", note:"8486(장비) 부문 독점적 지위", invest:"반도체 장비주 지속 보유 매력적" },
-    { flag:"🇨🇳", name:"중국", outlook:"중립", note:"8542.31 수입 의존, 자국 대체 시도 중", invest:"수입대체 정책 수혜주 제한적 접근" },
-    { flag:"🇯🇵", name:"일본", outlook:"중립", note:"소재·부품 코드 강세, 완제품 코드는 약세", invest:"부품·소재 코드 중심 분석 권장" },
-    { flag:"🇹🇼", name:"대만", outlook:"매우긍정", note:"8542 전체 코드 수출 세계 1위", invest:"파운드리 비중 최우선 고려 지속" },
+    { flag:"", name:"한국", outlook:"긍정", note:"8542.32(메모리) 세계 최상위 경쟁력", invest:"메모리 관련 수출 데이터 추적 유효" },
+    { flag:"", name:"미국", outlook:"매우긍정", note:"8486(장비) 부문 독점적 지위", invest:"반도체 장비주 지속 보유 매력적" },
+    { flag:"", name:"중국", outlook:"중립", note:"8542.31 수입 의존, 자국 대체 시도 중", invest:"수입대체 정책 수혜주 제한적 접근" },
+    { flag:"", name:"일본", outlook:"중립", note:"소재·부품 코드 강세, 완제품 코드는 약세", invest:"부품·소재 코드 중심 분석 권장" },
+    { flag:"", name:"대만", outlook:"매우긍정", note:"8542 전체 코드 수출 세계 1위", invest:"파운드리 비중 최우선 고려 지속" },
   ],
   supply: [
-    { flag:"🇰🇷", name:"한국", outlook:"긍정", note:"HBM 공급 집중, 가격 결정력 보유", invest:"공급 부족 국면 지속 시 가격 상승 수혜" },
-    { flag:"🇺🇸", name:"미국", outlook:"주의", note:"AI GPU 리드타임 52주+, 병목 심화", invest:"공급 병목 해소 시점까지 밸류에이션 유의" },
-    { flag:"🇨🇳", name:"중국", outlook:"중립", note:"성숙공정 공급 과잉 우려 상존", invest:"과잉공급 국면 시 가격 하락 리스크 대비" },
-    { flag:"🇯🇵", name:"일본", outlook:"긍정", note:"장비 리드타임 길지만 안정적 수주잔고", invest:"수주잔고 기반 장비주 안정적 접근" },
-    { flag:"🇹🇼", name:"대만", outlook:"주의", note:"자연재해·지정학 리스크로 공급 중단 우려", invest:"공급망 리스크 헤지 수단 마련 권고" },
+    { flag:"", name:"한국", outlook:"긍정", note:"HBM 공급 집중, 가격 결정력 보유", invest:"공급 부족 국면 지속 시 가격 상승 수혜" },
+    { flag:"", name:"미국", outlook:"주의", note:"AI GPU 리드타임 52주+, 병목 심화", invest:"공급 병목 해소 시점까지 밸류에이션 유의" },
+    { flag:"", name:"중국", outlook:"중립", note:"성숙공정 공급 과잉 우려 상존", invest:"과잉공급 국면 시 가격 하락 리스크 대비" },
+    { flag:"", name:"일본", outlook:"긍정", note:"장비 리드타임 길지만 안정적 수주잔고", invest:"수주잔고 기반 장비주 안정적 접근" },
+    { flag:"", name:"대만", outlook:"주의", note:"자연재해·지정학 리스크로 공급 중단 우려", invest:"공급망 리스크 헤지 수단 마련 권고" },
   ],
   power: [
-    { flag:"🇰🇷", name:"한국", outlook:"중립", note:"SiC 국산화 2027년 목표, 아직 초기 단계", invest:"장기 투자 관점의 씨앗 투자 검토" },
-    { flag:"🇺🇸", name:"미국", outlook:"매우긍정", note:"Wolfspeed 등 SiC 웨이퍼 세계 1위", invest:"SiC 웨이퍼 공급사 우선 검토" },
-    { flag:"🇨🇳", name:"중국", outlook:"긍정", note:"BYD 중심 SiC 내재화 급성장, 저가 공세", invest:"가격 경쟁 심화 리스크 감안 필요" },
-    { flag:"🇯🇵", name:"일본", outlook:"긍정", note:"로옴 GaN 강세, 전력반도체 전통 강자", invest:"GaN 파워 소자 기업 관심" },
-    { flag:"🇹🇼", name:"대만", outlook:"주의", note:"전력반도체보다 로직 중심, 상대적 열세", invest:"우선순위는 낮으나 후공정 참여 여지" },
+    { flag:"", name:"한국", outlook:"중립", note:"SiC 국산화 2027년 목표, 아직 초기 단계", invest:"장기 투자 관점의 씨앗 투자 검토" },
+    { flag:"", name:"미국", outlook:"매우긍정", note:"Wolfspeed 등 SiC 웨이퍼 세계 1위", invest:"SiC 웨이퍼 공급사 우선 검토" },
+    { flag:"", name:"중국", outlook:"긍정", note:"BYD 중심 SiC 내재화 급성장, 저가 공세", invest:"가격 경쟁 심화 리스크 감안 필요" },
+    { flag:"", name:"일본", outlook:"긍정", note:"로옴 GaN 강세, 전력반도체 전통 강자", invest:"GaN 파워 소자 기업 관심" },
+    { flag:"", name:"대만", outlook:"주의", note:"전력반도체보다 로직 중심, 상대적 열세", invest:"우선순위는 낮으나 후공정 참여 여지" },
   ],
   engineering: [
-    { flag:"🇰🇷", name:"한국", outlook:"중립", note:"TSMC 대비 0.5세대 격차, 추격 지속", invest:"수율 개선 모멘텀 확인 후 비중 확대 고려" },
-    { flag:"🇺🇸", name:"미국", outlook:"긍정", note:"18A 공정으로 격차 축소 시도, 설계력 최상", invest:"공정 전환 성공 여부가 투자 판단 분기점" },
-    { flag:"🇨🇳", name:"중국", outlook:"부정", note:"3~4세대 기술 격차 지속, 장비 접근 제한", invest:"기술 자립 성과 가시화 전까지 보수적 접근" },
-    { flag:"🇯🇵", name:"일본", outlook:"중립", note:"라피더스 국가 프로젝트, 상용화 검증 필요", invest:"정부 지원 지속성 확인 후 판단" },
-    { flag:"🇹🇼", name:"대만", outlook:"매우긍정", note:"공정 기술 세계 1위, 격차 지속 확대", invest:"기술 리더십 프리미엄 정당화 가능" },
+    { flag:"", name:"한국", outlook:"중립", note:"TSMC 대비 0.5세대 격차, 추격 지속", invest:"수율 개선 모멘텀 확인 후 비중 확대 고려" },
+    { flag:"", name:"미국", outlook:"긍정", note:"18A 공정으로 격차 축소 시도, 설계력 최상", invest:"공정 전환 성공 여부가 투자 판단 분기점" },
+    { flag:"", name:"중국", outlook:"부정", note:"3~4세대 기술 격차 지속, 장비 접근 제한", invest:"기술 자립 성과 가시화 전까지 보수적 접근" },
+    { flag:"", name:"일본", outlook:"중립", note:"라피더스 국가 프로젝트, 상용화 검증 필요", invest:"정부 지원 지속성 확인 후 판단" },
+    { flag:"", name:"대만", outlook:"매우긍정", note:"공정 기술 세계 1위, 격차 지속 확대", invest:"기술 리더십 프리미엄 정당화 가능" },
   ],
 };
 
 const TAB_DATA = {
   overview: {
     kpis: [
-      { label:"2024 시장 규모", value:"$6,110억", delta:"+19% YoY", color:"#0284c7" },
+      { label:"2024 시장 규모", value:"$6,110억", delta:"+19% YoY", color:"var(--accent)" },
       { label:"2025 전망", value:"$6,970억", delta:"+14% 예상", color:"#22c55e" },
       { label:"AI 칩 성장률", value:"+35%", delta:"CAGR 2024~30", color:"#f59e0b" },
       { label:"TSMC 파운드리 점유", value:"61.7%", delta:"2위 삼성 11.3%", color:"#7c3aed" },
@@ -213,7 +214,7 @@ const TAB_DATA = {
   },
   trade: {
     kpis: [
-      { label:"한국 반도체 수출", value:"$1,399억", delta:"전체 수출 21.3%", color:"#0284c7" },
+      { label:"한국 반도체 수출", value:"$1,399억", delta:"전체 수출 21.3%", color:"var(--accent)" },
       { label:"중국 반도체 수입", value:"$3,500억+", delta:"세계 최대 수입국", color:"#e34948" },
       { label:"대만 파운드리 수출", value:"$1,890억", delta:"세계 1위", color:"#22c55e" },
       { label:"미국 장비 수출", value:"$230억", delta:"KLA·Lam·AMAT", color:"#eda100" },
@@ -238,13 +239,13 @@ const TAB_DATA = {
   },
   tech: {
     kpis: [
-      { label:"HBM3E 대역폭", value:"1.18TB/s", delta:"12단 적층", color:"#0284c7" },
+      { label:"HBM3E 대역폭", value:"1.18TB/s", delta:"12단 적층", color:"var(--accent)" },
       { label:"N2 트랜지스터 밀도", value:"1.7억/mm²", delta:"N3 대비 +15%", color:"#22c55e" },
       { label:"EUV High-NA 가격", value:"4,000억원", delta:"ASML EXE:5000", color:"#f59e0b" },
       { label:"3→2nm 전력효율", value:"+30%", delta:"동일 성능 기준", color:"#7c3aed" },
     ],
     pie: { title:"차세대 트랜지스터 구조 채택 비중 (2025 전망)", labels:["GAA","FinFET","기타"], data:[45,50,5], colors:["#2a78d6","#888","#eda100"] },
-    lineChart: { title:"HBM 대역폭 세대별 진화 (GB/s)", labels:["HBM1","HBM2","HBM2E","HBM3","HBM3E","HBM4(E)"], data:[128,256,460,819,1180,2000], color:"#0284c7",
+    lineChart: { title:"HBM 대역폭 세대별 진화 (GB/s)", labels:["HBM1","HBM2","HBM2E","HBM3","HBM3E","HBM4(E)"], data:[128,256,460,819,1180,2000], color:"var(--accent)",
       reasons:["최초 세대, 초기 규격","대역폭 2배 확장","클럭 속도 개선","3세대 아키텍처 전환","12단 적층 상용화","차세대 규격 개발 중"] },
     text:`## AI 반도체·첨단 패키징
 - **HBM3E 12단**: SK하이닉스 세계 최초 양산
@@ -263,12 +264,12 @@ const TAB_DATA = {
   news: {
     kpis: [
       { label:"NVIDIA 시총", value:"$3조+", delta:"세계 1위 등극", color:"#22c55e" },
-      { label:"SK하이닉스 영업이익", value:"23조원", delta:"역대 최대", color:"#0284c7" },
+      { label:"SK하이닉스 영업이익", value:"23조원", delta:"역대 최대", color:"var(--accent)" },
       { label:"인텔 감원", value:"1.5만명", delta:"구조조정", color:"#e34948" },
-      { label:"TSMC 美팹 투자", value:"$650억", delta:"애리조나 3개 팹", color:"#f59e0b" },
+      { label:"TSMC 미국팹 투자", value:"$650억", delta:"애리조나 3개 팹", color:"#f59e0b" },
     ],
     pie: { title:"2024년 반도체 기업 매출 비중 (상위 6개사)", labels:["NVIDIA","삼성","TSMC","SK하이닉스","인텔","마이크론"], data:[27,20,19,13,12,9], colors:["#22c55e","#2a78d6","#1baf7a","#eda100","#4a3aa7","#e34948"] },
-    lineChart: { title:"NVIDIA 분기 데이터센터 매출 (억달러)", labels:["Q123","Q223","Q323","Q423","Q124","Q224","Q324","Q424"], data:[37,103,145,184,226,263,308,354], color:"#22c55e",
+    lineChart: { title:"NVIDIA 분기 데이터센터 매출 (억달러)", labels:["23년 Q1","23년 Q2","23년 Q3","23년 Q4","24년 Q1","24년 Q2","24년 Q3","24년 Q4"], data:[37,103,145,184,226,263,308,354], color:"#22c55e",
       reasons:["생성형AI 초기 수요","ChatGPT 열풍 확산","기업 AI 투자 본격화","H100 공급 확대","B100 출시 기대감","Blackwell 사전주문 급증","데이터센터 증설 러시","공급 부족 지속에도 매출 성장"] },
     text:`## 주요 기업 동향
 - **NVIDIA**: Blackwell 출시, GPU 리드타임 52주+
@@ -325,7 +326,7 @@ const TAB_DATA = {
   },
   hscode: {
     kpis: [
-      { label:"8542.31 AI칩 성장률", value:"+35%", delta:"CAGR 2024~2030", color:"#0284c7" },
+      { label:"8542.31 AI칩 성장률", value:"+35%", delta:"CAGR 2024~2030", color:"var(--accent)" },
       { label:"8542.32 메모리 성장률", value:"+22%", delta:"HBM 수요 주도", color:"#22c55e" },
       { label:"8486 장비 성장률", value:"+18%", delta:"각국 팹 건설 수요", color:"#f59e0b" },
       { label:"한국 8542 수출", value:"$1,250억", delta:"세계 2위", color:"#7c3aed" },
@@ -350,7 +351,7 @@ const TAB_DATA = {
       { label:"성숙공정 리스크", value:"저위험", delta:"중국 과잉 공급", color:"#1baf7a" },
     ],
     pie: { title:"품목별 리스크 비중 (가중치)", labels:["AI GPU/HBM","EUV 장비","희토류","DRAM","기타"], data:[32,28,20,12,8], colors:["#e34948","#e34948","#f59e0b","#eda100","#888"] },
-    lineChart: { title:"DRAM 현물가 추이 (DDR4 8Gb, $)", labels:["Q123","Q223","Q323","Q423","Q124","Q224","Q324","Q424"], data:[2.1,1.8,1.6,1.9,2.4,2.8,3.2,3.5], color:"#2a78d6",
+    lineChart: { title:"DRAM 현물가 추이 (DDR4 8Gb, $)", labels:["23년 Q1","23년 Q2","23년 Q3","23년 Q4","24년 Q1","24년 Q2","24년 Q3","24년 Q4"], data:[2.1,1.8,1.6,1.9,2.4,2.8,3.2,3.5], color:"#2a78d6",
       reasons:["금리인상+재고과잉 시작","수요둔화로 하락 지속","바닥 확인, 감산 효과","재고소진, 반등 시작","AI서버 수요 견인","가격 협상력 회복","공급부족 지속","상승세 유지"] },
     text:`## 수급 사이클 분석
 - **단기 노이즈**: AI 서버 투자 일시 둔화
@@ -364,7 +365,7 @@ const TAB_DATA = {
   power: {
     kpis: [
       { label:"전력반도체 시장(2024)", value:"$260억", delta:"→2030년 $500억", color:"#f59e0b" },
-      { label:"SiC 항복전압", value:"10,000V", delta:"Si 대비 10배", color:"#0284c7" },
+      { label:"SiC 항복전압", value:"10,000V", delta:"Si 대비 10배", color:"var(--accent)" },
       { label:"GaN 전자이동도", value:"2,000cm²/Vs", delta:"Si의 1.4배", color:"#22c55e" },
       { label:"SiC 열전도율", value:"490W/mK", delta:"Si의 3.3배", color:"#7c3aed" },
     ],
@@ -382,7 +383,7 @@ const TAB_DATA = {
   },
   engineering: {
     kpis: [
-      { label:"TSMC N3 밀도", value:"1.7억/mm²", delta:"7nm 대비 약 2배", color:"#0284c7" },
+      { label:"TSMC N3 밀도", value:"1.7억/mm²", delta:"7nm 대비 약 2배", color:"var(--accent)" },
       { label:"3nm 전력효율 향상", value:"+35~40%", delta:"7nm 대비", color:"#22c55e" },
       { label:"첨단공정 초기 수율", value:"50~60%", delta:"양산 목표 85%+", color:"#f59e0b" },
       { label:"한중 기술 격차", value:"3~4세대", delta:"유지 중", color:"#7c3aed" },
@@ -458,7 +459,7 @@ function ProcessIllustration({ shape }) {
   switch(shape) {
     case "ingot": return (
       <svg {...common}>{bg}
-        <ellipse cx="200" cy="55" rx="55" ry="18" fill="#94a3b8"/>
+        <ellipse cx="200" cy="55" rx="55" ry="18" fill="var(--text-3)"/>
         <rect x="145" y="55" width="110" height="110" fill="#cbd5e1"/>
         <ellipse cx="200" cy="165" rx="55" ry="18" fill="#64748b"/>
       </svg>);
@@ -470,10 +471,10 @@ function ProcessIllustration({ shape }) {
       </svg>);
     case "euv": return (
       <svg {...common}>{bg}
-        <rect x="100" y="45" width="200" height="120" rx="10" fill="#1e293b" stroke="#0284c7" strokeWidth="2"/>
-        <circle cx="200" cy="85" r="22" fill="#0284c7" opacity="0.7"/>
-        <line x1="200" y1="107" x2="200" y2="150" stroke="#0284c7" strokeWidth="3"/>
-        <rect x="170" y="150" width="60" height="14" fill="#94a3b8"/>
+        <rect x="100" y="45" width="200" height="120" rx="10" fill="#1e293b" stroke="#1e3a5f" strokeWidth="2"/>
+        <circle cx="200" cy="85" r="22" fill="#1e3a5f" opacity="0.7"/>
+        <line x1="200" y1="107" x2="200" y2="150" stroke="#1e3a5f" strokeWidth="3"/>
+        <rect x="170" y="150" width="60" height="14" fill="var(--text-3)"/>
       </svg>);
     case "plasma": return (
       <svg {...common}>{bg}
@@ -505,15 +506,15 @@ function ProcessIllustration({ shape }) {
       </svg>);
     case "sem": return (
       <svg {...common}>{bg}
-        <rect x="150" y="25" width="100" height="145" rx="6" fill="#1e293b" stroke="#0284c7" strokeWidth="2"/>
-        <circle cx="200" cy="75" r="18" fill="#0284c7" opacity="0.6"/>
-        <line x1="200" y1="93" x2="200" y2="150" stroke="#0284c7" strokeWidth="2"/>
+        <rect x="150" y="25" width="100" height="145" rx="6" fill="#1e293b" stroke="#1e3a5f" strokeWidth="2"/>
+        <circle cx="200" cy="75" r="18" fill="#1e3a5f" opacity="0.6"/>
+        <line x1="200" y1="93" x2="200" y2="150" stroke="#1e3a5f" strokeWidth="2"/>
         <rect x="170" y="150" width="60" height="16" fill="#64748b"/>
       </svg>);
     case "hbm": return (
       <svg {...common}>{bg}
         {[0,1,2,3].map(i=><rect key={i} x="140" y={135-i*22} width="120" height="18" fill="#2a78d6" opacity={0.5+i*0.12}/>)}
-        {[0,1,2].map(i=><line key={i} x1={160+i*40} y1="47" x2={160+i*40} y2="153" stroke="#0284c7" strokeWidth="2" opacity="0.7"/>)}
+        {[0,1,2].map(i=><line key={i} x1={160+i*40} y1="47" x2={160+i*40} y2="153" stroke="#1e3a5f" strokeWidth="2" opacity="0.7"/>)}
       </svg>);
     case "probe": return (
       <svg {...common}>{bg}
@@ -539,7 +540,7 @@ function PieChartSVG({ title, labels, data, colors }) {
   });
   return (
     <div style={{ marginBottom:20 }}>
-      <div style={{ fontSize:12, color:"#64748b", marginBottom:10 }}>{title}</div>
+      <div style={{ fontSize:12, color:"var(--text-3)", marginBottom:10 }}>{title}</div>
       <div style={{ display:"flex", gap:20, alignItems:"center", flexWrap:"wrap" }}>
         <svg width="150" height="150" viewBox="0 0 150 150">
           {slices.map((s,i)=><path key={i} d={s.d} fill={s.color} opacity="0.9" stroke="#060b18" strokeWidth="1.5"><title>{labels[i]}: {s.pct}%</title></path>)}
@@ -548,8 +549,8 @@ function PieChartSVG({ title, labels, data, colors }) {
           {labels.map((l,i)=>(
             <div key={i} style={{ display:"flex", alignItems:"center", gap:8, fontSize:12 }}>
               <span style={{ width:11, height:11, borderRadius:3, background:colors[i], flexShrink:0 }}/>
-              <span style={{ color:"#64748b" }}>{l}</span>
-              <span style={{ color:"#0f172a", fontWeight:700, marginLeft:"auto" }}>{slices[i].pct}%</span>
+              <span style={{ color:"var(--text-3)" }}>{l}</span>
+              <span style={{ color:"var(--text-1)", fontWeight:700, marginLeft:"auto" }}>{slices[i].pct}%</span>
             </div>
           ))}
         </div>
@@ -564,18 +565,18 @@ function BarChartSVG({ title, labels, data, colors, reasons }) {
   const gap=(W-PL-20-barW*labels.length)/(labels.length+1);
   return (
     <div style={{ marginBottom:20 }}>
-      <div style={{ fontSize:12, color:"#64748b", marginBottom:4 }}>{title}</div>
-      {reasons && <div style={{ fontSize:10, color:"#64748b", marginBottom:6 }}>💡 막대에 마우스를 올리면 증감 이유가 표시됩니다</div>}
+      <div style={{ fontSize:12, color:"var(--text-3)", marginBottom:4 }}>{title}</div>
+      {reasons && <div style={{ fontSize:10, color:"var(--text-3)", marginBottom:6 }}>막대에 마우스를 올리면 증감 이유가 표시됩니다</div>}
       <svg width="100%" viewBox={`0 0 ${W} ${H+PT+PB}`} style={{ overflow:"visible" }}>
-        {[0,0.5,1].map((r,i)=><line key={i} x1={PL} y1={PT+H*(1-r)} x2={W-10} y2={PT+H*(1-r)} stroke="rgba(15,23,42,0.09)" strokeWidth="1"/>)}
+        {[0,0.5,1].map((r,i)=><line key={i} x1={PL} y1={PT+H*(1-r)} x2={W-10} y2={PT+H*(1-r)} stroke="var(--border)" strokeWidth="1"/>)}
         {labels.map((label,i)=>{
           const bh=(data[i]/max)*H, x=PL+gap*(i+1)+barW*i;
           return (<g key={i} style={{ cursor: reasons ? "pointer" : "default" }}>
             <rect x={x} y={PT+H-bh} width={barW} height={bh} fill={colors[i]} rx="3" opacity="0.9">
               {reasons && <title>{label}: {data[i]} — {reasons[i]}</title>}
             </rect>
-            <text x={x+barW/2} y={PT+H+14} textAnchor="middle" fontSize="10" fill="#64748b">{label}</text>
-            <text x={x+barW/2} y={PT+H-bh-4} textAnchor="middle" fontSize="10" fill="#64748b">{data[i]}</text>
+            <text x={x+barW/2} y={PT+H+14} textAnchor="middle" fontSize="10" fill="var(--text-3)">{label}</text>
+            <text x={x+barW/2} y={PT+H-bh-4} textAnchor="middle" fontSize="10" fill="var(--text-3)">{data[i]}</text>
           </g>);
         })}
       </svg>
@@ -591,20 +592,20 @@ function LineChartSVG({ title, labels, data, color, reasons }) {
   const pts=data.map((v,i)=>`${px(i)},${py(v)}`).join(" ");
   return (
     <div style={{ marginBottom:20 }}>
-      <div style={{ fontSize:12, color:"#64748b", marginBottom:4 }}>{title}</div>
-      {reasons && <div style={{ fontSize:10, color:"#64748b", marginBottom:6 }}>💡 점에 마우스를 올리면 증감 이유가 표시됩니다</div>}
+      <div style={{ fontSize:12, color:"var(--text-3)", marginBottom:4 }}>{title}</div>
+      {reasons && <div style={{ fontSize:10, color:"var(--text-3)", marginBottom:6 }}>점에 마우스를 올리면 증감 이유가 표시됩니다</div>}
       <svg width="100%" viewBox={`0 0 ${W} ${H+PT+PB}`} style={{ overflow:"visible" }}>
         {[0,0.5,1].map((r,i)=>(<g key={i}>
-          <line x1={PL} y1={PT+H*(1-r)} x2={W-10} y2={PT+H*(1-r)} stroke="rgba(15,23,42,0.09)" strokeWidth="1"/>
-          <text x={PL-4} y={PT+H*(1-r)+4} textAnchor="end" fontSize="10" fill="#64748b">{Math.round(min+(max-min)*r)}</text>
+          <line x1={PL} y1={PT+H*(1-r)} x2={W-10} y2={PT+H*(1-r)} stroke="var(--border)" strokeWidth="1"/>
+          <text x={PL-4} y={PT+H*(1-r)+4} textAnchor="end" fontSize="10" fill="var(--text-3)">{Math.round(min+(max-min)*r)}</text>
         </g>))}
         <polyline points={pts} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" opacity="0.9"/>
         {data.map((v,i)=>(
-          <circle key={i} cx={px(i)} cy={py(v)} r="5" fill={color} stroke="rgba(255,255,255,0.95)" strokeWidth="2" style={{ cursor: reasons ? "pointer":"default" }}>
+          <circle key={i} cx={px(i)} cy={py(v)} r="5" fill={color} stroke="var(--input-bg)" strokeWidth="2" style={{ cursor: reasons ? "pointer":"default" }}>
             {reasons && <title>{labels[i]}: {v} — {reasons[i]}</title>}
           </circle>
         ))}
-        {labels.map((l,i)=><text key={i} x={px(i)} y={PT+H+18} textAnchor="middle" fontSize="10" fill="#64748b">{l}</text>)}
+        {labels.map((l,i)=><text key={i} x={px(i)} y={PT+H+18} textAnchor="middle" fontSize="10" fill="var(--text-3)">{l}</text>)}
       </svg>
     </div>
   );
@@ -612,12 +613,12 @@ function LineChartSVG({ title, labels, data, color, reasons }) {
 
 function KPIRow({ kpis }) {
   return (
-    <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:20 }}>
+    <div className="kpi-grid" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:20 }}>
       {kpis.map((k,i)=>(
-        <div key={i} style={{ background:"rgba(15,23,42,0.045)", border:"1px solid rgba(15,23,42,0.1)", borderRadius:12, padding:"14px 16px" }}>
-          <div style={{ fontSize:11, color:"#475569", marginBottom:6 }}>{k.label}</div>
+        <div key={i} style={{ background:"var(--card-bg)", border:"1px solid var(--border)", borderRadius:3, padding:"14px 16px" }}>
+          <div style={{ fontSize:11, color:"var(--text-4)", marginBottom:6 }}>{k.label}</div>
           <div style={{ fontSize:20, fontWeight:700, color:k.color, marginBottom:4 }}>{k.value}</div>
-          <div style={{ fontSize:11, color:"#64748b" }}>{k.delta}</div>
+          <div style={{ fontSize:11, color:"var(--text-3)" }}>{k.delta}</div>
         </div>
       ))}
     </div>
@@ -632,17 +633,17 @@ function CountryOutlookRow({ tabId }) {
   if (!rows) return null;
   return (
     <div style={{ marginBottom:20 }}>
-      <div style={{ fontSize:13, fontWeight:700, color:"#94a3b8", marginBottom:10 }}>🌍 국가별 전망 및 투자 참고</div>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:8 }}>
+      <div style={{ fontSize:13, fontWeight:700, color:"var(--text-3)", marginBottom:10 }}>국가별 전망 및 투자 참고</div>
+      <div className="outlook-grid" style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:8 }}>
         {rows.map((c,i)=>(
-          <div key={i} style={{ background:"rgba(15,23,42,0.045)", border:`1px solid ${OUTLOOK_COLOR[c.outlook]}33`, borderRadius:10, padding:"10px 12px" }}>
+          <div key={i} style={{ background:"var(--card-bg)", border:`1px solid ${OUTLOOK_COLOR[c.outlook]}33`, borderRadius:3, padding:"10px 12px" }}>
             <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:6 }}>
               <span style={{ fontSize:14 }}>{c.flag}</span>
-              <span style={{ fontSize:12, fontWeight:700, color:"#0f172a" }}>{c.name}</span>
-              <span style={{ marginLeft:"auto", fontSize:9, padding:"2px 6px", borderRadius:8, background:OUTLOOK_COLOR[c.outlook]+"22", color:OUTLOOK_COLOR[c.outlook], fontWeight:700, whiteSpace:"nowrap" }}>{c.outlook}</span>
+              <span style={{ fontSize:12, fontWeight:700, color:"var(--text-1)" }}>{c.name}</span>
+              <span style={{ marginLeft:"auto", fontSize:9, padding:"2px 6px", borderRadius:3, background:OUTLOOK_COLOR[c.outlook]+"22", color:OUTLOOK_COLOR[c.outlook], fontWeight:700, whiteSpace:"nowrap" }}>{c.outlook}</span>
             </div>
-            <div style={{ fontSize:11, color:"#64748b", lineHeight:1.5, marginBottom:6 }}>{c.note}</div>
-            <div style={{ fontSize:10, color:"#0284c7", lineHeight:1.5, borderTop:"1px solid rgba(15,23,42,0.09)", paddingTop:6 }}>💡 {c.invest}</div>
+            <div style={{ fontSize:11, color:"var(--text-3)", lineHeight:1.5, marginBottom:6 }}>{c.note}</div>
+            <div style={{ fontSize:10, color:"var(--accent)", lineHeight:1.5, borderTop:"1px solid var(--border)", paddingTop:6 }}> {c.invest}</div>
           </div>
         ))}
       </div>
@@ -652,8 +653,8 @@ function CountryOutlookRow({ tabId }) {
 
 function Disclaimer() {
   return (
-    <div style={{ fontSize:10.5, color:"#64748b", marginBottom:16, display:"flex", alignItems:"center", gap:6 }}>
-      <span>⚠️</span><span>AI 생성 정보로 오류 가능성이 있습니다. 참고용으로만 활용하세요.</span>
+    <div style={{ fontSize:10.5, color:"var(--text-3)", marginBottom:16, display:"flex", alignItems:"center", gap:6 }}>
+      <span>참고용 자료 — AI 생성 정보로 오류 가능성이 있습니다. 참고용으로만 활용하세요.</span>
     </div>
   );
 }
@@ -682,23 +683,23 @@ function MarkdownText({ text, onTermClick }) {
   return (
     <div style={{ lineHeight:1.85, fontSize:14 }}>
       {text.split("\n").map((line,i) => {
-        if (line.startsWith("## ")) return <h3 key={i} style={{ color:"#0284c7", fontSize:14, marginTop:18, marginBottom:8, fontWeight:700, borderLeft:"3px solid #0284c7", paddingLeft:10 }}>{line.slice(3)}</h3>;
-        if (line.startsWith("# "))  return <h2 key={i} style={{ color:"#0f172a", fontSize:17, marginTop:22, marginBottom:8, fontWeight:800 }}>{line.slice(2)}</h2>;
+        if (line.startsWith("## ")) return <h3 key={i} style={{ color:"var(--accent)", fontSize:14, marginTop:18, marginBottom:8, fontWeight:700, borderLeft:"3px solid #1e3a5f", paddingLeft:10 }}>{line.slice(3)}</h3>;
+        if (line.startsWith("# "))  return <h2 key={i} style={{ color:"var(--text-1)", fontSize:17, marginTop:22, marginBottom:8, fontWeight:800 }}>{line.slice(2)}</h2>;
         if (line.startsWith("- ")||line.startsWith("• ")) {
           const parts = line.slice(2).split(/\*\*(.*?)\*\*/g);
           return (
             <div key={i} style={{ display:"flex", gap:10, margin:"5px 0", paddingLeft:8 }}>
-              <span style={{ color:"#0284c7", flexShrink:0, marginTop:3 }}>▸</span>
-              <span style={{ color:"#64748b" }}>{parts.map((p,j)=>j%2===1
-                ? <strong key={j} style={{ color:"#0f172a" }}>{onTermClick?highlightGlossary(p,onTermClick):p}</strong>
+              <span style={{ color:"var(--accent)", flexShrink:0, marginTop:3 }}>▸</span>
+              <span style={{ color:"var(--text-3)" }}>{parts.map((p,j)=>j%2===1
+                ? <strong key={j} style={{ color:"var(--text-1)" }}>{onTermClick?highlightGlossary(p,onTermClick):p}</strong>
                 : (onTermClick?highlightGlossary(p,onTermClick):p))}</span>
             </div>
           );
         }
         if (line.trim()==="") return <div key={i} style={{ height:7 }}/>;
         const parts = line.split(/\*\*(.*?)\*\*/g);
-        return <p key={i} style={{ color:"#64748b", margin:"3px 0" }}>{parts.map((p,j)=>j%2===1
-          ? <strong key={j} style={{ color:"#0f172a" }}>{onTermClick?highlightGlossary(p,onTermClick):p}</strong>
+        return <p key={i} style={{ color:"var(--text-3)", margin:"3px 0" }}>{parts.map((p,j)=>j%2===1
+          ? <strong key={j} style={{ color:"var(--text-1)" }}>{onTermClick?highlightGlossary(p,onTermClick):p}</strong>
           : (onTermClick?highlightGlossary(p,onTermClick):p))}</p>;
       })}
     </div>
@@ -715,9 +716,9 @@ function TabContent({ tabId, onNavigate }) {
       {d.pie && <PieChartSVG {...d.pie}/>}
       {d.barChart && <BarChartSVG {...d.barChart}/>}
       {d.lineChart && <LineChartSVG {...d.lineChart}/>}
-      <div style={{ height:1, background:"rgba(15,23,42,0.09)", margin:"18px 0" }}/>
+      <div style={{ height:1, background:"var(--border)", margin:"18px 0" }}/>
       <MarkdownText text={d.text} onTermClick={(t)=>onNavigate("glossary",t)}/>
-      <div style={{ height:1, background:"rgba(15,23,42,0.09)", margin:"20px 0" }}/>
+      <div style={{ height:1, background:"var(--border)", margin:"20px 0" }}/>
       <CountryOutlookRow tabId={tabId}/>
     </div>
   );
@@ -725,9 +726,9 @@ function TabContent({ tabId, onNavigate }) {
 
 function ProcessImage({ photo, shape }) {
   const [failed, setFailed] = useState(false);
-  if (failed || !photo) return <div style={{ borderRadius:12, overflow:"hidden" }}><ProcessIllustration shape={shape}/></div>;
+  if (failed || !photo) return <div style={{ borderRadius:3, overflow:"hidden" }}><ProcessIllustration shape={shape}/></div>;
   return (
-    <div style={{ borderRadius:12, overflow:"hidden", background:"#0a1526" }}>
+    <div style={{ borderRadius:3, overflow:"hidden", background:"#0a1526" }}>
       <img src={photo} alt="" onError={()=>setFailed(true)} style={{ width:"100%", height:220, objectFit:"cover", display:"block" }}/>
     </div>
   );
@@ -737,47 +738,160 @@ function ProcessTab() {
   const [activeStep, setActiveStep] = useState(0);
   const s = PROCESS_STEPS[activeStep];
   return (
-    <div style={{ display:"flex", gap:20, maxWidth:1100 }}>
-      <div style={{ width:185, flexShrink:0 }}>
+    <div className="process-layout" style={{ display:"flex", gap:20, maxWidth:1100 }}>
+      <div className="process-nav" style={{ width:185, flexShrink:0 }}>
         {PROCESS_STEPS.map((ps,i)=>(
-          <button key={i} onClick={()=>setActiveStep(i)} style={{ width:"100%", textAlign:"left", padding:"8px 10px", marginBottom:3, background:activeStep===i?"rgba(0,212,255,0.15)":"rgba(15,23,42,0.035)", border:activeStep===i?"1px solid rgba(0,212,255,0.3)":"1px solid rgba(15,23,42,0.07)", borderRadius:8, color:activeStep===i?"#0284c7":"#64748b", cursor:"pointer", fontSize:12, fontWeight:activeStep===i?700:400, display:"flex", alignItems:"center", gap:8 }}>
-            <span style={{ width:20, height:20, borderRadius:"50%", background:activeStep===i?"#0284c7":"rgba(15,23,42,0.12)", color:activeStep===i?"#000":"#64748b", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, flexShrink:0 }}>{ps.step}</span>
+          <button key={i} onClick={()=>setActiveStep(i)} style={{ width:"100%", textAlign:"left", padding:"8px 10px", marginBottom:3, background:activeStep===i?"var(--accent-tint)":"var(--card-bg)", border:activeStep===i?"1px solid var(--accent-tint)":"1px solid var(--card-bg-2)", borderRadius:3, color:activeStep===i?"var(--accent)":"var(--text-3)", cursor:"pointer", fontSize:12, fontWeight:activeStep===i?700:400, display:"flex", alignItems:"center", gap:8 }}>
+            <span style={{ width:20, height:20, borderRadius:"50%", background:activeStep===i?"var(--accent)":"var(--border)", color:activeStep===i?"#000":"var(--text-3)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, flexShrink:0 }}>{ps.step}</span>
             {ps.title}
           </button>
         ))}
       </div>
-      <div style={{ flex:1, background:"rgba(15,23,42,0.035)", border:"1px solid rgba(15,23,42,0.09)", borderRadius:16, padding:"28px 32px" }}>
+      <div style={{ flex:1, background:"var(--card-bg)", border:"1px solid var(--border)", borderRadius:4, padding:"28px 32px" }}>
         <Disclaimer/>
-        <div style={{ fontSize:11, color:"#475569", marginBottom:4, fontWeight:600, textTransform:"uppercase" }}>STEP {s.step}</div>
-        <h2 style={{ margin:"0 0 2px", fontSize:20, fontWeight:800, color:"#0f172a" }}>{s.title}</h2>
-        <div style={{ fontSize:13, color:"#0284c7", marginBottom:16 }}>{s.subtitle}</div>
+        <div style={{ fontSize:11, color:"var(--text-4)", marginBottom:4, fontWeight:600, textTransform:"uppercase" }}>STEP {s.step}</div>
+        <h2 style={{ margin:"0 0 2px", fontSize:20, fontWeight:800, color:"var(--text-1)" }}>{s.title}</h2>
+        <div style={{ fontSize:13, color:"var(--accent)", marginBottom:16 }}>{s.subtitle}</div>
 
         <ProcessImage photo={s.photo} shape={s.shape} key={s.step}/>
 
         <div style={{ display:"flex", gap:10, marginTop:10, marginBottom:20, flexWrap:"wrap" }}>
           {s.captions.map((c,ci)=>(
-            <div key={ci} style={{ display:"flex", alignItems:"center", gap:6, background:"rgba(0,212,255,0.06)", border:"1px solid rgba(0,212,255,0.2)", borderRadius:8, padding:"6px 10px", fontSize:11, color:"#0369a1" }}>
-              <span style={{ width:6, height:6, borderRadius:"50%", background:"#0284c7", flexShrink:0 }}/>
+            <div key={ci} style={{ display:"flex", alignItems:"center", gap:6, background:"var(--accent-tint)", border:"1px solid var(--accent-tint)", borderRadius:3, padding:"6px 10px", fontSize:11, color:"#0369a1" }}>
+              <span style={{ width:6, height:6, borderRadius:"50%", background:"var(--accent)", flexShrink:0 }}/>
               {c}
             </div>
           ))}
         </div>
 
-        <div style={{ height:1, background:"rgba(15,23,42,0.09)", marginBottom:16 }}/>
+        <div style={{ height:1, background:"var(--border)", marginBottom:16 }}/>
         {s.points.map((p,i)=>(
           <div key={i} style={{ display:"flex", gap:10, margin:"7px 0" }}>
-            <span style={{ color:"#0284c7", flexShrink:0, marginTop:3 }}>▸</span>
-            <span style={{ color:"#64748b", fontSize:13, lineHeight:1.7 }}>{p}</span>
+            <span style={{ color:"var(--accent)", flexShrink:0, marginTop:3 }}>▸</span>
+            <span style={{ color:"var(--text-3)", fontSize:13, lineHeight:1.7 }}>{p}</span>
           </div>
         ))}
         <div style={{ display:"flex", justifyContent:"space-between", marginTop:24 }}>
-          <button onClick={()=>setActiveStep(p=>Math.max(0,p-1))} disabled={activeStep===0} style={{ padding:"8px 18px", background:"rgba(15,23,42,0.07)", border:"1px solid rgba(15,23,42,0.14)", borderRadius:8, color:activeStep===0?"#94a3b8":"#64748b", cursor:activeStep===0?"default":"pointer", fontSize:13 }}>← 이전</button>
-          <span style={{ fontSize:12, color:"#64748b", alignSelf:"center" }}>{activeStep+1} / {PROCESS_STEPS.length}</span>
-          <button onClick={()=>setActiveStep(p=>Math.min(PROCESS_STEPS.length-1,p+1))} disabled={activeStep===PROCESS_STEPS.length-1} style={{ padding:"8px 18px", background:"rgba(0,212,255,0.08)", border:"1px solid rgba(0,212,255,0.2)", borderRadius:8, color:activeStep===PROCESS_STEPS.length-1?"#94a3b8":"#0284c7", cursor:activeStep===PROCESS_STEPS.length-1?"default":"pointer", fontSize:13 }}>다음 →</button>
+          <button onClick={()=>setActiveStep(p=>Math.max(0,p-1))} disabled={activeStep===0} style={{ padding:"8px 18px", background:"var(--card-bg-2)", border:"1px solid var(--border)", borderRadius:3, color:activeStep===0?"var(--text-3)":"var(--text-3)", cursor:activeStep===0?"default":"pointer", fontSize:13 }}>← 이전</button>
+          <span style={{ fontSize:12, color:"var(--text-3)", alignSelf:"center" }}>{activeStep+1} / {PROCESS_STEPS.length}</span>
+          <button onClick={()=>setActiveStep(p=>Math.min(PROCESS_STEPS.length-1,p+1))} disabled={activeStep===PROCESS_STEPS.length-1} style={{ padding:"8px 18px", background:"var(--accent-tint)", border:"1px solid var(--accent-tint)", borderRadius:3, color:activeStep===PROCESS_STEPS.length-1?"var(--text-3)":"var(--accent)", cursor:activeStep===PROCESS_STEPS.length-1?"default":"pointer", fontSize:13 }}>다음 →</button>
         </div>
       </div>
     </div>
   );
+}
+
+function CompareTab() {
+  const [view, setView] = useState("company");
+  const [selectedCompanies, setSelectedCompanies] = useState(["tsmc","samsung"]);
+  const [selectedCountries, setSelectedCountries] = useState(["kr","us"]);
+
+  const items = view==="company" ? COMPANY_METRICS : COUNTRY_METRICS;
+  const selected = view==="company" ? selectedCompanies : selectedCountries;
+  const setSelected = view==="company" ? setSelectedCompanies : setSelectedCountries;
+  const metricDefs = view==="company" ? COMPANY_METRIC_DEFS : COUNTRY_METRIC_DEFS;
+
+  function toggle(id) {
+    setSelected(prev => prev.includes(id) ? prev.filter(x=>x!==id) : [...prev, id]);
+  }
+
+  const chosen = items.filter(it => selected.includes(it.id));
+
+  return (
+    <div style={{ maxWidth:1040 }}>
+      <Disclaimer/>
+      <div style={{ display:"flex", gap:8, marginBottom:18 }}>
+        <button onClick={()=>setView("company")} style={{ padding:"8px 16px", background: view==="company"?"var(--accent)":"var(--card-bg)", border:"1px solid var(--border)", borderRadius:3, color: view==="company"?"#fff":"var(--text-2)", cursor:"pointer", fontSize:13, fontWeight:600 }}>기업 비교</button>
+        <button onClick={()=>setView("country")} style={{ padding:"8px 16px", background: view==="country"?"var(--accent)":"var(--card-bg)", border:"1px solid var(--border)", borderRadius:3, color: view==="country"?"#fff":"var(--text-2)", cursor:"pointer", fontSize:13, fontWeight:600 }}>국가 비교</button>
+      </div>
+
+      <div style={{ marginBottom:16 }}>
+        <div style={{ fontSize:12, color:"var(--text-3)", marginBottom:8 }}>비교할 {view==="company"?"기업":"국가"}을 2개 이상 선택하세요</div>
+        <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+          {items.map(it => (
+            <button key={it.id} onClick={()=>toggle(it.id)} style={{
+              padding:"7px 16px", borderRadius:20, cursor:"pointer", fontSize:13, fontWeight:600,
+              background: selected.includes(it.id) ? "var(--accent)" : "var(--card-bg)",
+              color: selected.includes(it.id) ? "#fff" : "var(--text-2)",
+              border: selected.includes(it.id) ? "1px solid var(--accent)" : "1px solid var(--border)",
+            }}>{it.name}{selected.includes(it.id) ? " ✓" : ""}</button>
+          ))}
+        </div>
+      </div>
+
+      {chosen.length < 2 && (
+        <div style={{ textAlign:"center", padding:"60px 0", color:"var(--text-3)", background:"var(--card-bg)", border:"1px solid var(--border)", borderRadius:4 }}>
+          2개 이상 선택하면 수치 비교표가 나타납니다
+        </div>
+      )}
+
+      {chosen.length >= 2 && (
+        <div style={{ background:"var(--card-bg)", border:"1px solid var(--border)", borderRadius:4, overflow:"auto" }}>
+          <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
+            <thead>
+              <tr style={{ background:"var(--card-bg-2)", textAlign:"left" }}>
+                <th style={{ padding:"10px 14px", color:"var(--text-2)", fontWeight:700, borderBottom:"2px solid var(--border-strong)" }}>지표</th>
+                {chosen.map(c => (
+                  <th key={c.id} style={{ padding:"10px 14px", color:"var(--text-1)", fontWeight:800, borderBottom:"2px solid var(--border-strong)", textAlign:"center" }}>{c.name}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {metricDefs.map(md => {
+                const values = chosen.map(c => c[md.key]);
+                const max = Math.max(...values);
+                const min = Math.min(...values);
+                const allSame = max === min;
+                return (
+                  <tr key={md.key} style={{ borderBottom:"1px solid var(--border)" }}>
+                    <td style={{ padding:"10px 14px", color:"var(--text-3)", fontSize:12 }}>{md.label}</td>
+                    {chosen.map((c,i) => {
+                      const v = values[i];
+                      const isMax = !allSame && v === max;
+                      const isMin = !allSame && v === min;
+                      return (
+                        <td key={c.id} style={{ padding:"10px 14px", textAlign:"center" }}>
+                          <span style={{
+                            display:"inline-block", padding:"3px 10px", borderRadius:3, fontWeight:700,
+                            color: isMax ? "#16a34a" : isMin ? "#dc2626" : "var(--text-1)",
+                            background: isMax ? "rgba(22,163,74,0.1)" : isMin ? "rgba(220,38,38,0.1)" : "transparent",
+                          }}>{isMax ? "▲ " : isMin ? "▼ " : ""}{v.toLocaleString()}</span>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+              <tr>
+                <td style={{ padding:"10px 14px", color:"var(--text-3)", fontSize:12 }}>비고</td>
+                {chosen.map(c => (
+                  <td key={c.id} style={{ padding:"10px 14px", textAlign:"center", color:"var(--text-3)", fontSize:11 }}>{c.note}</td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+      <div style={{ fontSize:10, color:"var(--text-4)", marginTop:10 }}>▲초록 = 선택 항목 중 최고값 · ▼빨강 = 선택 항목 중 최저값 (모든 값이 같으면 강조 없음)</div>
+    </div>
+  );
+}
+
+function highlightCompanies(text) {
+  let parts = [text];
+  KNOWN_COMPANIES.forEach(name => {
+    const next = [];
+    parts.forEach(part => {
+      if (typeof part !== "string") { next.push(part); return; }
+      const idx = part.indexOf(name);
+      if (idx === -1) { next.push(part); return; }
+      next.push(part.slice(0,idx));
+      next.push(<strong key={name+idx+Math.random()} style={{ color:"var(--accent)" }}>{name}</strong>);
+      next.push(part.slice(idx+name.length));
+    });
+    parts = next;
+  });
+  return parts;
 }
 
 function GlossaryTab({ highlightTerm }) {
@@ -785,12 +899,12 @@ function GlossaryTab({ highlightTerm }) {
     <div style={{ maxWidth:800 }}>
       <Disclaimer/>
       {Object.entries(GLOSSARY).map(([term,info])=>(
-        <div key={term} id={`term-${term}`} style={{ background: highlightTerm===term ? "rgba(0,212,255,0.1)" : "rgba(15,23,42,0.035)", border: highlightTerm===term ? "1px solid rgba(0,212,255,0.4)" : "1px solid rgba(15,23,42,0.09)", borderRadius:10, padding:"14px 18px", marginBottom:10 }}>
+        <div key={term} id={`term-${term}`} style={{ background: highlightTerm===term ? "var(--accent-tint)" : "var(--card-bg)", border: highlightTerm===term ? "1px solid var(--accent-tint)" : "1px solid var(--border)", borderRadius:3, padding:"14px 18px", marginBottom:10 }}>
           <div style={{ display:"flex", alignItems:"baseline", gap:8, marginBottom:4, flexWrap:"wrap" }}>
-            <span style={{ fontSize:15, fontWeight:800, color:"#0284c7" }}>{term}</span>
-            <span style={{ fontSize:11, color:"#475569" }}>{info.full}</span>
+            <span style={{ fontSize:15, fontWeight:800, color:"var(--accent)" }}>{term}</span>
+            <span style={{ fontSize:11, color:"var(--text-4)" }}>{info.full}</span>
           </div>
-          <div style={{ fontSize:13, color:"#64748b", lineHeight:1.7 }}>{info.def}</div>
+          <div style={{ fontSize:13, color:"var(--text-3)", lineHeight:1.7 }}>{info.def}</div>
         </div>
       ))}
     </div>
@@ -800,7 +914,7 @@ function GlossaryTab({ highlightTerm }) {
 function LoadingDots() {
   return (
     <div style={{ display:"flex", gap:6, alignItems:"center", padding:"40px 0", justifyContent:"center" }}>
-      {[0,1,2].map(i=><div key={i} style={{ width:10, height:10, borderRadius:"50%", background:"#0284c7", animation:`pulse 1.2s ease-in-out ${i*0.2}s infinite` }}/>)}
+      {[0,1,2].map(i=><div key={i} style={{ width:10, height:10, borderRadius:"50%", background:"var(--accent)", animation:`pulse 1.2s ease-in-out ${i*0.2}s infinite` }}/>)}
       <style>{`@keyframes pulse{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}`}</style>
     </div>
   );
@@ -814,7 +928,73 @@ function routeSearch(query) {
   return null;
 }
 
+// UI 다국어 사전 (화면 메뉴·버튼 전용, 본문 데이터는 한국어 고정)
+const UI_TEXT = {
+  ko: {
+    home: "통합 검색", groupHome:"홈", groupBasic:"기본", groupDeep:"심화 분석", groupProcess:"공정·용어",
+    tabOverview:"시장 개요", tabTrade:"무역 현황", tabTech:"기술 트렌드", tabNews:"최신 뉴스", tabPolicy:"규제·정책",
+    tabMaterials:"소재 의존도", tabHscode:"HS Code 분석", tabSupply:"수급 예측", tabPower:"전력 반도체", tabEngineering:"전자공학 지표",
+    tabProcess:"공정 과정", tabGlossary:"용어 색인", tabCompare:"기업·국가 비교",
+    settings:"설정", theme:"테마", light:"라이트", dark:"다크", language:"언어",
+    favorites:"즐겨찾기", noFavorites:"즐겨찾기한 탭이 없습니다", lastUpdated:"데이터 기준",
+    searchPlaceholder:"검색어를 입력하세요... (예: 삼성전자, HBM4, 반도체 수출)",
+    searchBtn:"검색", searching:"검색 중...", refresh:"실시간 새로고침", updating:"업데이트 중...",
+    disclaimer:"참고용 자료 — AI 생성 정보로 오류 가능성이 있습니다. 참고용으로만 활용하세요.",
+    exchangeRate:"환율", staticData:"사전 정리 데이터", analysisTarget:"분석 대상국",
+  },
+  en: {
+    home: "Search", groupHome:"Home", groupBasic:"Overview", groupDeep:"Deep Dive", groupProcess:"Process & Terms",
+    tabOverview:"Market Overview", tabTrade:"Trade Status", tabTech:"Tech Trends", tabNews:"Latest News", tabPolicy:"Policy & Regulation",
+    tabMaterials:"Material Dependency", tabHscode:"HS Code Analysis", tabSupply:"Supply Forecast", tabPower:"Power Semiconductors", tabEngineering:"Engineering Metrics",
+    tabProcess:"Manufacturing Process", tabGlossary:"Glossary", tabCompare:"Company/Country Compare",
+    settings:"Settings", theme:"Theme", light:"Light", dark:"Dark", language:"Language",
+    favorites:"Favorites", noFavorites:"No favorited tabs yet", lastUpdated:"Data as of",
+    searchPlaceholder:"Type a search term... (e.g. Samsung, HBM4, semiconductor exports)",
+    searchBtn:"Search", searching:"Searching...", refresh:"Live Refresh", updating:"Updating...",
+    disclaimer:"Reference only — AI-generated content may contain errors. For reference purposes only.",
+    exchangeRate:"Exchange Rates", staticData:"Curated dataset", analysisTarget:"Countries covered",
+  },
+};
+
+// 기업/국가 비교 탭 데이터
+// 기업 비교용 수치 지표 (근사치 · 참고용, 전사 기준 추정 포함)
+const COMPANY_METRICS = [
+  { id:"tsmc",    name:"TSMC",      country:"대만", marketCapB:700,  revenueB:90,  rdPercent:8,  employeeK:76,  note:"파운드리 전문 · 전사 기준 추정치" },
+  { id:"samsung", name:"삼성전자",   country:"한국", marketCapB:330,  revenueB:70,  rdPercent:9,  employeeK:120, note:"반도체(DS)부문 매출 추정 · 시가총액은 전사 기준" },
+  { id:"skhynix", name:"SK하이닉스", country:"한국", marketCapB:95,   revenueB:40,  rdPercent:10, employeeK:32,  note:"전사 기준 추정치" },
+  { id:"intel",   name:"인텔",       country:"미국", marketCapB:100,  revenueB:53,  rdPercent:20, employeeK:124, note:"전사 기준 추정치" },
+  { id:"nvidia",  name:"NVIDIA",     country:"미국", marketCapB:3000, revenueB:115, rdPercent:15, employeeK:30,  note:"전사 기준 추정치 · 팹리스" },
+];
+const COMPANY_METRIC_DEFS = [
+  { key:"marketCapB", label:"시가총액 (십억달러)" },
+  { key:"revenueB",   label:"연매출 (십억달러)" },
+  { key:"rdPercent",  label:"매출 대비 R&D 비중 (%)" },
+  { key:"employeeK",  label:"임직원 수 (천명)" },
+];
+
+// 국가 비교용 수치 지표 (근사치 · 참고용)
+const COUNTRY_METRICS = [
+  { id:"kr", name:"한국", exportB:140, govSupportB:80,  selfSufficiency:30, note:"메모리·HBM 중심" },
+  { id:"us", name:"미국", exportB:50,  govSupportB:527, selfSufficiency:60, note:"설계·장비 중심, 물리적 수출액은 상대적으로 작음" },
+  { id:"cn", name:"중국", exportB:150, govSupportB:470, selfSufficiency:20, note:"조립·테스트 수출 비중 높음" },
+  { id:"jp", name:"일본", exportB:40,  govSupportB:68,  selfSufficiency:85, note:"소재·장비 중심" },
+  { id:"tw", name:"대만", exportB:189, govSupportB:15,  selfSufficiency:25, note:"파운드리 중심" },
+];
+const COUNTRY_METRIC_DEFS = [
+  { key:"exportB",         label:"반도체 수출 규모 (십억달러)" },
+  { key:"govSupportB",     label:"정부 지원 규모 (십억달러)" },
+  { key:"selfSufficiency", label:"소재·장비 자립도 (%)" },
+];
+
+// 검색 결과 기업명 자동 태그용 목록
+const KNOWN_COMPANIES = [
+  "삼성전자","SK하이닉스","TSMC","인텔","NVIDIA","AMD","퀄컴","마이크론","ASML","애플",
+  "화웨이","SMIC","라피더스","Wolfspeed","로옴","STMicro","Infineon","BYD","구글","아마존",
+];
+
 const GROUPS = ["기본","심화 분석","공정·용어"];
+
+
 
 function SemiconductorDashboard() {
   const [activeTab, setActiveTab]         = useState("search");
@@ -831,9 +1011,42 @@ function SemiconductorDashboard() {
   const [searchHistory, setSearchHistory] = useState([]);
   const [routeSuggestion, setRouteSuggestion] = useState(null);
 
+  const [darkMode, setDarkMode]           = useState(false);
+  const [lang, setLang]                   = useState("ko");
+  const [settingsOpen, setSettingsOpen]   = useState(false);
+  const [favorites, setFavorites]         = useState(() => {
+    try { return JSON.parse(localStorage.getItem("semi_favorites") || "[]"); } catch { return []; }
+  });
+  const [isMobile, setIsMobile]           = useState(typeof window !== "undefined" && window.innerWidth < 860);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [fxRates, setFxRates]             = useState(null);
+  const [fxError, setFxError]             = useState(false);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 860);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
+    fetch("https://api.frankfurter.dev/v1/latest?base=USD&symbols=KRW,JPY,CNY,TWD")
+      .then(r => r.json())
+      .then(d => setFxRates(d))
+      .catch(() => setFxError(true));
+  }, []);
+
+  function toggleFavorite(tabId) {
+    setFavorites(prev => {
+      const next = prev.includes(tabId) ? prev.filter(t => t !== tabId) : [...prev, tabId];
+      try { localStorage.setItem("semi_favorites", JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }
+
   function navigate(tabId, term) {
     setActiveTab(tabId);
     if (term) setGlossaryTerm(term);
+    setMobileMenuOpen(false);
   }
 
   async function fetchLive(tabId) {
@@ -889,120 +1102,211 @@ function SemiconductorDashboard() {
   const hasLive = !!liveContent[activeTab];
   const timeAgo = (ts) => { if(!ts)return""; const m=Math.floor((Date.now()-ts)/60000); return m<1?"방금 전":`${m}분 전`; };
 
+  const T = darkMode ? {
+    bg:"#11151c", sidebarBg:"rgba(20,25,34,0.9)", topbarBg:"rgba(20,25,34,0.7)", inputBg:"rgba(255,255,255,0.06)",
+    cardBg:"rgba(255,255,255,0.04)", cardBg2:"rgba(255,255,255,0.06)", cardSolid:"#1a2029",
+    border:"rgba(255,255,255,0.1)", borderStrong:"rgba(255,255,255,0.18)",
+    text1:"#f1f5f9", text2:"#cbd5e1", text3:"#94a3b8", text4:"#64748b",
+    accent:"#5b9bd5", accentTint:"rgba(91,155,213,0.15)",
+  } : {
+    bg:"#f2f3f5", sidebarBg:"rgba(255,255,255,0.85)", topbarBg:"rgba(255,255,255,0.6)", inputBg:"rgba(255,255,255,0.9)",
+    cardBg:"rgba(15,23,42,0.04)", cardBg2:"rgba(15,23,42,0.07)", cardSolid:"#ffffff",
+    border:"rgba(15,23,42,0.12)", borderStrong:"rgba(15,23,42,0.2)",
+    text1:"#0f172a", text2:"#334155", text3:"#64748b", text4:"#475569",
+    accent:"#1e3a5f", accentTint:"rgba(30,58,95,0.08)",
+  };
+  const rootVars = {
+    "--bg":T.bg, "--sidebar-bg":T.sidebarBg, "--topbar-bg":T.topbarBg, "--input-bg":T.inputBg,
+    "--card-bg":T.cardBg, "--card-bg-2":T.cardBg2, "--card-solid":T.cardSolid,
+    "--border":T.border, "--border-strong":T.borderStrong,
+    "--text-1":T.text1, "--text-2":T.text2, "--text-3":T.text3, "--text-4":T.text4,
+    "--accent":T.accent, "--accent-tint":T.accentTint,
+  };
+  const L = UI_TEXT[lang];
+
   return (
-    <div style={{ display:"flex", minHeight:"100vh", background:"linear-gradient(160deg,#f8fafc 0%,#eef2f7 55%,#e9edf3 100%)", fontFamily:"'Segoe UI',system-ui,sans-serif", color:"#0f172a" }}>
-      <aside style={{ width:230, flexShrink:0, background:"rgba(255,255,255,0.85)", borderRight:"1px solid rgba(0,212,255,0.1)", display:"flex", flexDirection:"column", backdropFilter:"blur(12px)", position:"sticky", top:0, height:"100vh", overflowY:"auto" }}>
+    <div style={{ ...rootVars, display:"flex", minHeight:"100vh", background:"var(--bg)", fontFamily:"'Segoe UI',system-ui,sans-serif", color:"var(--text-1)" }}>
+      <style>{`
+        @media (max-width: 860px) {
+          .kpi-grid { grid-template-columns: repeat(2,1fr) !important; }
+          .outlook-grid { grid-template-columns: 1fr !important; }
+          .process-layout { flex-direction: column !important; }
+          .process-nav { width: 100% !important; display:flex; flex-wrap:wrap; gap:4px; }
+        }
+      `}</style>
+      {isMobile && (
+        <button onClick={()=>setMobileMenuOpen(m=>!m)} style={{ position:"fixed", top:14, left:14, zIndex:60, width:38, height:38, background:"var(--accent)", color:"#fff", border:"none", borderRadius:3, fontSize:16, cursor:"pointer" }}>
+          {mobileMenuOpen ? "✕" : "≡"}
+        </button>
+      )}
+      {isMobile && mobileMenuOpen && (
+        <div onClick={()=>setMobileMenuOpen(false)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.4)", zIndex:45 }}/>
+      )}
+      <aside style={{
+        width:230, flexShrink:0, background:"var(--sidebar-bg)", borderRight:"1px solid var(--accent-tint)",
+        display:"flex", flexDirection:"column", backdropFilter:"blur(12px)",
+        position: isMobile ? "fixed" : "sticky", top:0, left: isMobile ? (mobileMenuOpen ? 0 : -240) : "auto",
+        height:"100vh", overflowY:"auto", zIndex:50, transition:"left 0.2s ease",
+      }}>
         <div style={{ padding:"22px 18px 14px" }}>
           <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8 }}>
-            <div style={{ width:34, height:34, borderRadius:8, background:"linear-gradient(135deg,#0284c7,#0055ff)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>⚡</div>
-            <div><div style={{ fontSize:14, fontWeight:800 }}>반도체</div><div style={{ fontSize:10, color:"#0284c7", fontWeight:600 }}>INTELLIGENCE</div></div>
+            <div style={{ width:34, height:34, borderRadius:3, background:"var(--accent)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}></div>
+            <div><div style={{ fontSize:14, fontWeight:800 }}>반도체</div><div style={{ fontSize:10, color:"var(--accent)", fontWeight:600 }}>INTELLIGENCE</div></div>
+            <div style={{ marginLeft:"auto", position:"relative" }}>
+              <button onClick={()=>setSettingsOpen(s=>!s)} title={L.settings} style={{ width:30, height:30, background:"var(--card-bg)", border:"1px solid var(--border)", borderRadius:3, color:"var(--text-2)", cursor:"pointer", fontSize:14 }}>⚙</button>
+              {settingsOpen && (
+                <div style={{ position:"absolute", top:34, right:0, width:190, background:"var(--card-solid)", border:"1px solid var(--border-strong)", borderRadius:4, padding:12, zIndex:70, boxShadow:"0 4px 16px rgba(0,0,0,0.15)" }}>
+                  <div style={{ fontSize:10, fontWeight:700, color:"var(--text-3)", marginBottom:6, textTransform:"uppercase" }}>{L.theme}</div>
+                  <div style={{ display:"flex", gap:6, marginBottom:12 }}>
+                    <button onClick={()=>setDarkMode(false)} style={{ flex:1, padding:"6px 0", background: !darkMode?"var(--accent)":"var(--card-bg)", color: !darkMode?"#fff":"var(--text-2)", border:"1px solid var(--border)", borderRadius:3, cursor:"pointer", fontSize:12 }}>{L.light}</button>
+                    <button onClick={()=>setDarkMode(true)} style={{ flex:1, padding:"6px 0", background: darkMode?"var(--accent)":"var(--card-bg)", color: darkMode?"#fff":"var(--text-2)", border:"1px solid var(--border)", borderRadius:3, cursor:"pointer", fontSize:12 }}>{L.dark}</button>
+                  </div>
+                  <div style={{ fontSize:10, fontWeight:700, color:"var(--text-3)", marginBottom:6, textTransform:"uppercase" }}>{L.language}</div>
+                  <div style={{ display:"flex", gap:6 }}>
+                    <button onClick={()=>setLang("ko")} style={{ flex:1, padding:"6px 0", background: lang==="ko"?"var(--accent)":"var(--card-bg)", color: lang==="ko"?"#fff":"var(--text-2)", border:"1px solid var(--border)", borderRadius:3, cursor:"pointer", fontSize:12 }}>한국어</button>
+                    <button onClick={()=>setLang("en")} style={{ flex:1, padding:"6px 0", background: lang==="en"?"var(--accent)":"var(--card-bg)", color: lang==="en"?"#fff":"var(--text-2)", border:"1px solid var(--border)", borderRadius:3, cursor:"pointer", fontSize:12 }}>English</button>
+                  </div>
+                  <div style={{ fontSize:9, color:"var(--text-4)", marginTop:10, lineHeight:1.5 }}>언어는 메뉴·버튼에만 적용되며 본문 데이터는 한국어로 제공됩니다.</div>
+                </div>
+              )}
+            </div>
           </div>
-          <div style={{ fontSize:10, color:"#22c55e", background:"rgba(34,197,94,0.08)", border:"1px solid rgba(34,197,94,0.25)", padding:"3px 8px", borderRadius:12, display:"inline-block" }}>✅ 즉시 사용 가능</div>
+          <div style={{ fontSize:10, color:"#22c55e", background:"rgba(34,197,94,0.08)", border:"1px solid rgba(34,197,94,0.25)", padding:"3px 8px", borderRadius:3, display:"inline-block" }}>즉시 사용 가능</div>
         </div>
         <div style={{ padding:"0 10px 12px" }}>
-          <button onClick={()=>navigate("search")} style={{ width:"100%", textAlign:"left", padding:"11px 14px", background: activeTab==="search"?"rgba(0,212,255,0.18)":"rgba(0,212,255,0.06)", border:"1px solid rgba(0,212,255,0.3)", borderRadius:10, color:"#0284c7", cursor:"pointer", fontSize:14, fontWeight:700, display:"flex", alignItems:"center", gap:8 }}>
-            🔍 통합 검색 <span style={{ marginLeft:"auto", fontSize:10, color:"#475569" }}>홈</span>
+          <button onClick={()=>navigate("search")} style={{ width:"100%", textAlign:"left", padding:"11px 14px", background: activeTab==="search"?"var(--accent-tint)":"var(--accent-tint)", border:"1px solid var(--accent-tint)", borderRadius:3, color:"var(--accent)", cursor:"pointer", fontSize:14, fontWeight:700, display:"flex", alignItems:"center", gap:8 }}>
+             {L.home} <span style={{ marginLeft:"auto", fontSize:10, color:"var(--text-4)" }}>{L.groupHome}</span>
           </button>
         </div>
-        <div style={{ height:1, background:"rgba(15,23,42,0.07)", margin:"0 14px" }}/>
-        {GROUPS.map(group=>(
-          <div key={group} style={{ padding:"12px 10px 4px" }}>
-            <div style={{ fontSize:9, fontWeight:700, color:"#64748b", letterSpacing:"0.1em", textTransform:"uppercase", paddingLeft:8, marginBottom:5 }}>{group}</div>
-            {TABS.filter(t=>t.group===group).map(t=>(
-              <button key={t.id} onClick={()=>navigate(t.id)} style={{ width:"100%", textAlign:"left", padding:"9px 12px", background:activeTab===t.id?"rgba(0,212,255,0.12)":"transparent", border:activeTab===t.id?"1px solid rgba(0,212,255,0.25)":"1px solid transparent", borderRadius:8, color:activeTab===t.id?"#0284c7":"#64748b", cursor:"pointer", fontSize:13, fontWeight:activeTab===t.id?600:400, display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:2 }}>
-                <span>{t.icon} {t.label}</span>
-                <span>{loading[t.id]&&<span style={{ fontSize:8, color:"#f59e0b" }}>●</span>}{liveContent[t.id]&&!loading[t.id]&&<span style={{ fontSize:8, color:"#0284c7" }}>🔴</span>}</span>
+        <div style={{ height:1, background:"var(--card-bg-2)", margin:"0 14px" }}/>
+        {favorites.length > 0 && (
+          <div style={{ padding:"12px 10px 4px" }}>
+            <div style={{ fontSize:9, fontWeight:700, color:"var(--text-3)", letterSpacing:"0.1em", textTransform:"uppercase", paddingLeft:8, marginBottom:5 }}>{L.favorites}</div>
+            {TABS.filter(t=>favorites.includes(t.id)).map(t=>(
+              <button key={t.id} onClick={()=>navigate(t.id)} style={{ width:"100%", textAlign:"left", padding:"9px 12px", background:activeTab===t.id?"var(--accent-tint)":"transparent", border:activeTab===t.id?"1px solid var(--accent-tint)":"1px solid transparent", borderRadius:3, color:activeTab===t.id?"var(--accent)":"var(--text-3)", cursor:"pointer", fontSize:13, fontWeight:activeTab===t.id?600:400, display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:2 }}>
+                <span>★ {t.label}</span>
               </button>
             ))}
           </div>
+        )}
+        {GROUPS.map(group=>(
+          <div key={group} style={{ padding:"12px 10px 4px" }}>
+            <div style={{ fontSize:9, fontWeight:700, color:"var(--text-3)", letterSpacing:"0.1em", textTransform:"uppercase", paddingLeft:8, marginBottom:5 }}>{group}</div>
+            {TABS.filter(t=>t.group===group).map(t=>(
+              <div key={t.id} style={{ display:"flex", alignItems:"center", marginBottom:2 }}>
+                <button onClick={()=>navigate(t.id)} style={{ flex:1, textAlign:"left", padding:"9px 12px", background:activeTab===t.id?"var(--accent-tint)":"transparent", border:activeTab===t.id?"1px solid var(--accent-tint)":"1px solid transparent", borderRadius:3, color:activeTab===t.id?"var(--accent)":"var(--text-3)", cursor:"pointer", fontSize:13, fontWeight:activeTab===t.id?600:400, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                  <span>{t.label}</span>
+                  <span>{loading[t.id]&&<span style={{ fontSize:8, color:"#f59e0b" }}>●</span>}{liveContent[t.id]&&!loading[t.id]&&<span style={{ fontSize:8, color:"var(--accent)" }}></span>}</span>
+                </button>
+                <button onClick={()=>toggleFavorite(t.id)} title="즐겨찾기" style={{ background:"transparent", border:"none", cursor:"pointer", color: favorites.includes(t.id) ? "#f59e0b" : "var(--border-strong)", fontSize:13, padding:"0 6px" }}>★</button>
+              </div>
+            ))}
+          </div>
         ))}
-        <div style={{ marginTop:"auto", padding:"14px", borderTop:"1px solid rgba(15,23,42,0.07)" }}>
-          <div style={{ fontSize:9, color:"#64748b", marginBottom:6, fontWeight:600 }}>분석 대상국</div>
+        <div style={{ marginTop:"auto", padding:"14px", borderTop:"1px solid var(--card-bg-2)" }}>
+          <div style={{ fontSize:9, color:"var(--text-3)", marginBottom:6, fontWeight:600 }}>{L.exchangeRate}</div>
+          <div style={{ fontSize:11, color:"var(--text-2)", lineHeight:1.9 }}>
+            {fxError && <div style={{ color:"var(--text-4)" }}>환율 정보를 불러올 수 없습니다</div>}
+            {!fxError && !fxRates && <div style={{ color:"var(--text-4)" }}>불러오는 중...</div>}
+            {fxRates && fxRates.rates && (
+              <div>
+                <div>USD/KRW &nbsp; {fxRates.rates.KRW ? fxRates.rates.KRW.toFixed(1) : "-"}</div>
+                <div>JPY100/KRW &nbsp; {fxRates.rates.JPY ? (fxRates.rates.KRW/fxRates.rates.JPY*100).toFixed(1) : "-"}</div>
+                <div>CNY/KRW &nbsp; {fxRates.rates.CNY ? (fxRates.rates.KRW/fxRates.rates.CNY).toFixed(1) : "-"}</div>
+              </div>
+            )}
+          </div>
+          <div style={{ fontSize:9, color:"var(--text-3)", marginTop:12, marginBottom:6, fontWeight:600 }}>{L.analysisTarget}</div>
           <div style={{ display:"flex", flexWrap:"wrap", gap:4 }}>
-            {["🇰🇷 KR","🇺🇸 US","🇨🇳 CN","🇯🇵 JP","🇹🇼 TW"].map(c=>(<span key={c} style={{ fontSize:10, background:"rgba(15,23,42,0.07)", border:"1px solid rgba(15,23,42,0.12)", borderRadius:4, padding:"2px 6px", color:"#64748b" }}>{c}</span>))}
+            {["KR","US","CN","JP","TW"].map(c=>(<span key={c} style={{ fontSize:10, background:"var(--card-bg-2)", border:"1px solid var(--border)", borderRadius:4, padding:"2px 6px", color:"var(--text-3)" }}>{c}</span>))}
           </div>
         </div>
       </aside>
 
-      <main style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
-        <div style={{ padding:"14px 32px", borderBottom:"1px solid rgba(15,23,42,0.07)", background:"rgba(255,255,255,0.6)", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+      <main style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden", paddingTop: isMobile ? 54 : 0 }}>
+        <div style={{ padding:"14px 32px", borderBottom:"1px solid var(--card-bg-2)", background:"var(--topbar-bg)", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
           <div>
-            <h2 style={{ margin:0, fontSize:20, fontWeight:800 }}>{tab.icon} {tab.label}</h2>
-            <p style={{ margin:"3px 0 0", fontSize:12, color:"#475569" }}>
+            <h2 style={{ margin:0, fontSize:20, fontWeight:800 }}>{tab.label}</h2>
+            <p style={{ margin:"3px 0 0", fontSize:12, color:"var(--text-4)" }}>
               {activeTab==="process"?"단계별 공정 상세 · 사진(실패 시 일러스트) + 캡션":
-               activeTab==="search"?"키워드 검색 → 실시간 관련 뉴스 · 시작 화면":
+               activeTab==="search"?"키워드 검색 · 실시간 관련 뉴스 · 시작 화면":
                activeTab==="glossary"?"전문용어 클릭 시 여기로 이동":
-               isLiveShown?`🔴 실시간 업데이트 텍스트 표시 중 · ${timeAgo(lastUpdated[activeTab])}`:"📋 사전 정리 데이터 · KPI·차트·국가전망 포함"}
+               activeTab==="compare"?"주요 기업·국가 핵심 지표 비교":
+               isLiveShown?` 실시간 업데이트 텍스트 표시 중 · ${timeAgo(lastUpdated[activeTab])}`:" 사전 정리 데이터 · KPI·차트·국가전망 포함"}
             </p>
           </div>
-          {activeTab!=="process"&&activeTab!=="search"&&activeTab!=="glossary"&&(
+          {activeTab!=="process"&&activeTab!=="search"&&activeTab!=="glossary"&&activeTab!=="compare"&&(
             <div style={{ display:"flex", gap:8, alignItems:"center" }}>
               {hasLive && isLiveShown && (
-                <button onClick={()=>revertLive(activeTab)} style={{ padding:"7px 14px", background:"rgba(15,23,42,0.07)", border:"1px solid rgba(15,23,42,0.2)", borderRadius:8, color:"#64748b", fontSize:12, cursor:"pointer" }}>↩ 기본 데이터로</button>
+                <button onClick={()=>revertLive(activeTab)} style={{ padding:"7px 14px", background:"var(--card-bg-2)", border:"1px solid var(--border-strong)", borderRadius:3, color:"var(--text-3)", fontSize:12, cursor:"pointer" }}>기본 데이터로 복원</button>
               )}
               {hasLive && !isLiveShown && (
-                <button onClick={()=>setShowLive(p=>({...p,[activeTab]:true}))} style={{ padding:"7px 14px", background:"rgba(0,212,255,0.08)", border:"1px solid rgba(0,212,255,0.2)", borderRadius:8, color:"#0284c7", fontSize:12, cursor:"pointer" }}>🔴 실시간 결과 다시 보기</button>
+                <button onClick={()=>setShowLive(p=>({...p,[activeTab]:true}))} style={{ padding:"7px 14px", background:"var(--accent-tint)", border:"1px solid var(--accent-tint)", borderRadius:3, color:"var(--accent)", fontSize:12, cursor:"pointer" }}>실시간 결과 다시 보기</button>
               )}
-              <button onClick={()=>fetchLive(activeTab)} disabled={loading[activeTab]} style={{ padding:"7px 16px", background:"linear-gradient(135deg,rgba(0,212,255,0.15),rgba(0,85,255,0.15))", border:"1px solid rgba(0,212,255,0.3)", borderRadius:8, color:"#0284c7", fontSize:12, cursor:loading[activeTab]?"not-allowed":"pointer", fontWeight:600, opacity:loading[activeTab]?0.6:1 }}>
-                {loading[activeTab]?"⏳ 업데이트 중...":"🔄 실시간 새로고침"}
+              <button onClick={()=>fetchLive(activeTab)} disabled={loading[activeTab]} style={{ padding:"7px 16px", background:"linear-gradient(135deg,var(--accent-tint),rgba(0,85,255,0.15))", border:"1px solid var(--accent-tint)", borderRadius:3, color:"var(--accent)", fontSize:12, cursor:loading[activeTab]?"not-allowed":"pointer", fontWeight:600, opacity:loading[activeTab]?0.6:1 }}>
+                {loading[activeTab]?"⏳ 업데이트 중...":" 실시간 새로고침"}
               </button>
             </div>
           )}
         </div>
 
+        <div style={{ padding:"6px 32px", background:"var(--accent-tint)", borderBottom:"1px solid var(--border)", fontSize:11, color:"var(--text-2)", textAlign:"center" }}>
+          {L.lastUpdated}: 2024~2025 (사전 정리 데이터) · 실시간 뉴스 검색은 통합 검색 탭에서 최신 정보 확인 가능
+        </div>
         <div style={{ flex:1, overflowY:"auto", padding:"24px 32px" }}>
           {activeTab==="process"&&<ProcessTab/>}
+          {activeTab==="compare"&&<CompareTab/>}
           {activeTab==="glossary"&&<GlossaryTab highlightTerm={glossaryTerm}/>}
 
           {activeTab==="search"&&(
             <div style={{ maxWidth:960 }}>
               <Disclaimer/>
-              <div style={{ background:"rgba(15,23,42,0.05)", border:"1px solid rgba(0,212,255,0.15)", borderRadius:16, padding:"26px 30px", marginBottom:16 }}>
-                <div style={{ fontSize:14, color:"#64748b", marginBottom:12, fontWeight:600 }}>🔍 국가·기술·기업·소재·정책·HS코드를 검색하면 실시간 관련 뉴스를 보여드립니다</div>
-                <div style={{ fontSize:12, color:"#64748b", marginBottom:12 }}>예: "삼성전자", "HBM4", "TSMC 2나노"</div>
+              <div style={{ background:"var(--card-bg)", border:"1px solid var(--accent-tint)", borderRadius:4, padding:"26px 30px", marginBottom:16 }}>
+                <div style={{ fontSize:14, color:"var(--text-3)", marginBottom:12, fontWeight:600 }}>국가·기술·기업·소재·정책·HS코드를 검색하면 실시간 관련 뉴스를 보여드립니다</div>
+                <div style={{ fontSize:12, color:"var(--text-3)", marginBottom:12 }}>예: "삼성전자", "HBM4", "TSMC 2나노"</div>
                 <div style={{ display:"flex", gap:10 }}>
                   <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doSearch(searchQuery)}
                     placeholder="검색어를 입력하세요... (예: 삼성전자, HBM4, 반도체 수출)"
-                    style={{ flex:1, padding:"13px 16px", background:"rgba(255,255,255,0.9)", border:"1px solid rgba(0,212,255,0.25)", borderRadius:10, color:"#0f172a", fontSize:15, outline:"none" }}/>
-                  <button onClick={()=>doSearch(searchQuery)} disabled={searchLoading} style={{ padding:"13px 26px", background:"linear-gradient(135deg,#0284c7,#0055ff)", border:"none", borderRadius:10, color:"#fff", fontWeight:700, fontSize:14, cursor:"pointer", opacity:searchLoading?0.6:1 }}>
+                    style={{ flex:1, padding:"13px 16px", background:"var(--input-bg)", border:"1px solid var(--accent-tint)", borderRadius:3, color:"var(--text-1)", fontSize:15, outline:"none" }}/>
+                  <button onClick={()=>doSearch(searchQuery)} disabled={searchLoading} style={{ padding:"13px 26px", background:"var(--accent)", border:"none", borderRadius:3, color:"#fff", fontWeight:700, fontSize:14, cursor:"pointer", opacity:searchLoading?0.6:1 }}>
                     {searchLoading?"분석 중...":"검색"}
                   </button>
                 </div>
                 <div style={{ display:"flex", gap:6, marginTop:14, flexWrap:"wrap" }}>
                   {["한국","일본","중국","대만","미국","HBM","SiC","GaN","CHIPS법","EUV","공급망","불화수소","GAA","8542","수출통제","파운드리"].map(c=>(
-                    <button key={c} onClick={()=>{setSearchQuery(c);doSearch(c);}} style={{ padding:"5px 12px", background:"rgba(15,23,42,0.09)", border:"1px solid rgba(15,23,42,0.16)", borderRadius:20, color:"#64748b", fontSize:11, cursor:"pointer" }}>{c}</button>
+                    <button key={c} onClick={()=>{setSearchQuery(c);doSearch(c);}} style={{ padding:"5px 12px", background:"var(--border)", border:"1px solid var(--border-strong)", borderRadius:3, color:"var(--text-3)", fontSize:11, cursor:"pointer" }}>{c}</button>
                   ))}
                 </div>
               </div>
 
               {routeSuggestion&&searchResult&&(
-                <div style={{ background:"rgba(99,102,241,0.1)", border:"1px solid rgba(99,102,241,0.25)", borderRadius:10, padding:"12px 18px", marginBottom:16, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                  <span style={{ fontSize:13, color:"#3730a3" }}>💡 <strong>"{searchQuery}"</strong>은 <strong>{TABS.find(t=>t.id===routeSuggestion)?.label}</strong> 탭에서 차트·국가별 전망과 함께 더 자세히 볼 수 있어요</span>
-                  <button onClick={()=>navigate(routeSuggestion)} style={{ padding:"6px 14px", background:"rgba(99,102,241,0.2)", border:"1px solid rgba(99,102,241,0.4)", borderRadius:8, color:"#4f46e5", fontSize:12, cursor:"pointer", fontWeight:600, whiteSpace:"nowrap" }}>탭으로 이동 →</button>
+                <div style={{ background:"rgba(99,102,241,0.1)", border:"1px solid rgba(99,102,241,0.25)", borderRadius:3, padding:"12px 18px", marginBottom:16, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                  <span style={{ fontSize:13, color:"#3730a3" }}><strong>"{searchQuery}"</strong>은 <strong>{TABS.find(t=>t.id===routeSuggestion)?.label}</strong> 탭에서 차트·국가별 전망과 함께 더 자세히 볼 수 있어요</span>
+                  <button onClick={()=>navigate(routeSuggestion)} style={{ padding:"6px 14px", background:"rgba(99,102,241,0.2)", border:"1px solid rgba(99,102,241,0.4)", borderRadius:3, color:"#4f46e5", fontSize:12, cursor:"pointer", fontWeight:600, whiteSpace:"nowrap" }}>관련 탭으로 이동</button>
                 </div>
               )}
 
               {searchHistory.length>0&&(
                 <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap", alignItems:"center" }}>
-                  <span style={{ fontSize:11, color:"#64748b" }}>최근:</span>
-                  {searchHistory.map((h,i)=>(<button key={i} onClick={()=>{setSearchQuery(h.query);doSearch(h.query);}} style={{ padding:"3px 10px", background:"rgba(99,102,241,0.1)", border:"1px solid rgba(99,102,241,0.2)", borderRadius:12, color:"#4338ca", fontSize:11, cursor:"pointer" }}>{h.query}</button>))}
+                  <span style={{ fontSize:11, color:"var(--text-3)" }}>최근:</span>
+                  {searchHistory.map((h,i)=>(<button key={i} onClick={()=>{setSearchQuery(h.query);doSearch(h.query);}} style={{ padding:"3px 10px", background:"rgba(99,102,241,0.1)", border:"1px solid rgba(99,102,241,0.2)", borderRadius:3, color:"#4338ca", fontSize:11, cursor:"pointer" }}>{h.query}</button>))}
                 </div>
               )}
 
-              <div style={{ background:"rgba(15,23,42,0.05)", border:"1px solid rgba(15,23,42,0.14)", borderRadius:16, padding:"30px 34px", minHeight:300 }}>
-                {searchLoading&&(<div style={{ display:"flex", flexDirection:"column", alignItems:"center", padding:"60px 0" }}><LoadingDots/><p style={{ color:"#475569", fontSize:13, marginTop:14 }}>"{searchQuery}" 관련 뉴스 검색 중...</p></div>)}
-                {!searchLoading&&!searchResult&&!searchError&&(<div style={{ textAlign:"center", padding:"80px 0", color:"#64748b" }}><div style={{ fontSize:56, marginBottom:16 }}>🔍</div><p style={{ fontSize:15 }}>키워드를 검색하면 실시간 관련 뉴스를<br/>제목·출처·링크와 함께 보여드립니다</p></div>)}
-                {searchError&&(<div style={{ padding:16, background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.2)", borderRadius:10, color:"#b91c1c", fontSize:13, lineHeight:1.6 }}>⚠️ {searchError}</div>)}
-                {searchResult&&!searchLoading&&searchResult.length===0&&(<div style={{ textAlign:"center", padding:"60px 0", color:"#64748b" }}>관련 뉴스를 찾지 못했습니다.</div>)}
+              <div style={{ background:"var(--card-bg)", border:"1px solid var(--border)", borderRadius:4, padding:"30px 34px", minHeight:300 }}>
+                {searchLoading&&(<div style={{ display:"flex", flexDirection:"column", alignItems:"center", padding:"60px 0" }}><LoadingDots/><p style={{ color:"var(--text-4)", fontSize:13, marginTop:14 }}>"{searchQuery}" 관련 뉴스 검색 중...</p></div>)}
+                {!searchLoading&&!searchResult&&!searchError&&(<div style={{ textAlign:"center", padding:"80px 0", color:"var(--text-3)" }}><div style={{ fontSize:56, marginBottom:16 }}></div><p style={{ fontSize:15 }}>키워드를 검색하면 실시간 관련 뉴스를<br/>제목·출처·링크와 함께 보여드립니다</p></div>)}
+                {searchError&&(<div style={{ padding:16, background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.2)", borderRadius:3, color:"#b91c1c", fontSize:13, lineHeight:1.6 }}> {searchError}</div>)}
+                {searchResult&&!searchLoading&&searchResult.length===0&&(<div style={{ textAlign:"center", padding:"60px 0", color:"var(--text-3)" }}>관련 뉴스를 찾지 못했습니다.</div>)}
                 {searchResult&&!searchLoading&&searchResult.length>0&&(
                   <div>
-                    <div style={{ fontSize:12, color:"#64748b", marginBottom:14 }}>📰 "{searchQuery}" 관련 실시간 뉴스 {searchResult.length}건</div>
+                    <div style={{ fontSize:12, color:"var(--text-3)", marginBottom:14 }}>"{searchQuery}" 검색 결과 — 관련 실시간 뉴스 {searchResult.length}건</div>
                     {searchResult.map((item,i)=>(
-                      <a key={i} href={item.link} target="_blank" rel="noopener noreferrer" style={{ display:"block", textDecoration:"none", background:"#ffffff", border:"1px solid rgba(15,23,42,0.1)", borderRadius:10, padding:"14px 18px", marginBottom:10 }}>
-                        <div style={{ fontSize:14, fontWeight:700, color:"#0f172a", marginBottom:4 }}>{item.title}</div>
-                        <div style={{ fontSize:12, color:"#475569", lineHeight:1.6, marginBottom:6 }}>{item.description}</div>
-                        <div style={{ display:"flex", gap:8, alignItems:"center", fontSize:11, color:"#94a3b8" }}>
-                          <span>🔗 {(()=>{try{return new URL(item.link).hostname;}catch{return item.link;}})()}</span>
+                      <a key={i} href={item.link} target="_blank" rel="noopener noreferrer" style={{ display:"block", textDecoration:"none", background:"var(--card-solid)", border:"1px solid var(--border)", borderRadius:3, padding:"14px 18px", marginBottom:10 }}>
+                        <div style={{ fontSize:14, fontWeight:700, color:"var(--text-1)", marginBottom:4 }}>{highlightCompanies(item.title)}</div>
+                        <div style={{ fontSize:12, color:"var(--text-4)", lineHeight:1.6, marginBottom:6 }}>{highlightCompanies(item.description)}</div>
+                        <div style={{ display:"flex", gap:8, alignItems:"center", fontSize:11, color:"var(--text-3)" }}>
+                          <span> {(()=>{try{return new URL(item.link).hostname;}catch{return item.link;}})()}</span>
                           <span>·</span>
                           <span>{item.pubDate}</span>
                         </div>
@@ -1014,24 +1318,24 @@ function SemiconductorDashboard() {
             </div>
           )}
 
-          {activeTab!=="search"&&activeTab!=="process"&&activeTab!=="glossary"&&(
-            <div style={{ background:"rgba(15,23,42,0.035)", border:"1px solid rgba(15,23,42,0.09)", borderRadius:16, padding:"28px 32px", minHeight:400, maxWidth:1040 }}>
-              {loading[activeTab]&&(<div style={{ display:"flex", flexDirection:"column", alignItems:"center", padding:"60px 0" }}><LoadingDots/><p style={{ color:"#475569", fontSize:13, marginTop:14 }}>AI가 웹을 검색하고 최신 정보를 가져오는 중...</p></div>)}
+          {activeTab!=="search"&&activeTab!=="process"&&activeTab!=="glossary"&&activeTab!=="compare"&&(
+            <div style={{ background:"var(--card-bg)", border:"1px solid var(--border)", borderRadius:4, padding:"28px 32px", minHeight:400, maxWidth:1040 }}>
+              {loading[activeTab]&&(<div style={{ display:"flex", flexDirection:"column", alignItems:"center", padding:"60px 0" }}><LoadingDots/><p style={{ color:"var(--text-4)", fontSize:13, marginTop:14 }}>AI가 웹을 검색하고 최신 정보를 가져오는 중...</p></div>)}
               {error[activeTab]&&(
-                <div style={{ padding:14, background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.2)", borderRadius:10, color:"#b91c1c", display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
-                  <span>⚠️ {error[activeTab]}</span>
-                  <button onClick={()=>fetchLive(activeTab)} style={{ padding:"6px 12px", background:"rgba(239,68,68,0.15)", border:"1px solid rgba(239,68,68,0.3)", borderRadius:6, color:"#b91c1c", fontSize:12, cursor:"pointer" }}>재시도</button>
+                <div style={{ padding:14, background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.2)", borderRadius:3, color:"#b91c1c", display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+                  <span> {error[activeTab]}</span>
+                  <button onClick={()=>fetchLive(activeTab)} style={{ padding:"6px 12px", background:"rgba(239,68,68,0.15)", border:"1px solid rgba(239,68,68,0.3)", borderRadius:3, color:"#b91c1c", fontSize:12, cursor:"pointer" }}>재시도</button>
                 </div>
               )}
               {!loading[activeTab]&&(
                 <div>
                   <TabContent tabId={activeTab} onNavigate={navigate}/>
                   {isLiveShown && (
-                    <div style={{ marginTop:24, borderTop:"2px solid rgba(0,212,255,0.2)", paddingTop:20 }}>
+                    <div style={{ marginTop:24, borderTop:"2px solid var(--accent-tint)", paddingTop:20 }}>
                       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
-                        <span style={{ fontSize:12, fontWeight:700, color:"#0284c7" }}>🔴 실시간 업데이트 결과</span>
-                        <span style={{ fontSize:10, color:"#64748b" }}>{timeAgo(lastUpdated[activeTab])}</span>
-                        <button onClick={()=>clearLive(activeTab)} style={{ marginLeft:"auto", fontSize:10, color:"#64748b", background:"transparent", border:"1px solid rgba(15,23,42,0.14)", borderRadius:6, padding:"3px 8px", cursor:"pointer" }}>✕ 삭제</button>
+                        <span style={{ fontSize:12, fontWeight:700, color:"var(--accent)" }}>실시간 업데이트 결과</span>
+                        <span style={{ fontSize:10, color:"var(--text-3)" }}>{timeAgo(lastUpdated[activeTab])}</span>
+                        <button onClick={()=>clearLive(activeTab)} style={{ marginLeft:"auto", fontSize:10, color:"var(--text-3)", background:"transparent", border:"1px solid var(--border)", borderRadius:3, padding:"3px 8px", cursor:"pointer" }}>삭제</button>
                       </div>
                       <MarkdownText text={liveContent[activeTab]} onTermClick={(t)=>navigate("glossary",t)}/>
                     </div>
@@ -1041,8 +1345,8 @@ function SemiconductorDashboard() {
             </div>
           )}
 
-          <p style={{ textAlign:"center", color:"#94a3b8", fontSize:11, marginTop:20 }}>
-            💡 향후 기업별 미래 예측 기능 추가 예정 · 🔄 버튼으로 실시간 업데이트 · 기본 데이터: 2024~2025
+          <p style={{ textAlign:"center", color:"var(--text-3)", fontSize:11, marginTop:20 }}>
+             향후 기업별 미래 예측 기능 추가 예정 ·  버튼으로 실시간 업데이트 · 기본 데이터: 2024~2025
           </p>
         </div>
       </main>
